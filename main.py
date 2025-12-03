@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
+from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -106,13 +107,10 @@ def predict_manual(data: ManualInput):
 # Configuración para servir el Frontend (index.html)
 # --------------------------
 
-# 1. Montar el directorio estático (para CSS, JS y el background.png)
-# 'directory="."' busca en la carpeta raíz del proyecto.
+## 1. Montar el directorio estático
 app.mount("/static", StaticFiles(directory="."), name="static")
 
-# 2. Ruta Raíz ("/") para devolver el index.html
-# Esta ruta resuelve el error "Not Found"
+# 2. Ruta Raíz ("/")
 @app.get("/")
 async def serve_index():
-    # Devuelve el archivo index.html
     return FileResponse('index.html')
