@@ -1,5 +1,4 @@
 from fastapi import FastAPI, UploadFile, File
-from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -101,16 +100,16 @@ def predict_manual(data: ManualInput):
 
     return {"prediction": label, "features": data.dict()}
 
-# main.py (AGREGAR ESTO AL FINAL DEL ARCHIVO)
 
-# --------------------------
-# Configuración para servir el Frontend (index.html)
-# --------------------------
+# ---------------------------
+# SERVIR FRONTEND
+# ---------------------------
 
-## 1. Montar el directorio estático
-app.mount("/static", StaticFiles(directory="."), name="static")
-
-# 2. Ruta Raíz ("/")
+# Ruta principal → index.html
 @app.get("/")
-async def serve_index():
-    return FileResponse('index.html')
+def frontend():
+    return FileResponse("static/index.html")
+
+
+# Carpeta de archivos estáticos
+app.mount("/static", StaticFiles(directory="static"), name="static")

@@ -1,11 +1,8 @@
-Flask
-numpy
-scikit-learn
-joblib
-gunicorn
-pefile
 fastapi
 uvicorn
 pandas
+joblib
+scikit-learn
+pefile
 imbalanced-learn
 python-multipart

@@ -3,68 +3,58 @@ import re
 
 
 def extract_metadata(file_path):
-    # Inicializar las características con 0 para manejarlas si fallan
-    features = {
-        "Machine": 0, "DebugSize": 0, "DebugRVA": 0, "MajorImageVersion": 0,
-        "MajorOSVersion": 0, "ExportRVA": 0, "ExportSize": 0, "IatVRA": 0,
-        "MajorLinkerVersion": 0, "MinorLinkerVersion": 0, "NumberOfSections": 0,
-        "SizeOfStackReserve": 0, "DllCharacteristics": 0, "ResourceSize": 0,
-        "BitcoinAddresses": 0
-    }
-    
     try:
-        pe = pefile.PE(file_path, fast_load=True)
+        pe = pefile.PE(file_path)
 
         # Basic PE header fields
-        features["Machine"] = pe.FILE_HEADER.Machine
-        features["NumberOfSections"] = pe.FILE_HEADER.NumberOfSections
-        
-        opt_header = pe.OPTIONAL_HEADER
-        features["MajorLinkerVersion"] = opt_header.MajorLinkerVersion
-        features["MinorLinkerVersion"] = opt_header.MinorLinkerVersion
-        features["MajorImageVersion"] = opt_header.MajorImageVersion
-        features["MajorOSVersion"] = opt_header.MajorOperatingSystemVersion
-        features["SizeOfStackReserve"] = opt_header.SizeOfStackReserve
-        features["DllCharacteristics"] = opt_header.DllCharacteristics
+        Machine = pe.FILE_HEADER.Machine
+        NumberOfSections = pe.FILE_HEADER.NumberOfSections
+        MajorLinkerVersion = pe.OPTIONAL_HEADER.MajorLinkerVersion
+        MinorLinkerVersion = pe.OPTIONAL_HEADER.MinorLinkerVersion
+        MajorImageVersion = pe.OPTIONAL_HEADER.MajorImageVersion
+        MajorOSVersion = pe.OPTIONAL_HEADER.MajorOperatingSystemVersion
+        SizeOfStackReserve = pe.OPTIONAL_HEADER.SizeOfStackReserve
+        DllCharacteristics = pe.OPTIONAL_HEADER.DllCharacteristics
 
-        # Directorios de Datos (Envuelto en try-except para manejar archivos PE incompletos)
-        data_dir = opt_header.DATA_DIRECTORY
+        # Debug info
+        DebugSize = pe.OPTIONAL_HEADER.DATA_DIRECTORY[6].Size
+        DebugRVA = pe.OPTIONAL_HEADER.DATA_DIRECTORY[6].VirtualAddress
 
-        try:
-            # Export table (Index 0)
-            features["ExportSize"] = data_dir[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_EXPORT']].Size
-            features["ExportRVA"] = data_dir[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_EXPORT']].VirtualAddress
-        except (AttributeError, IndexError): pass
-        
-        try:
-            # Import Address Table (IAT) (Index 1) - Índice 1 es la dirección correcta para IAT.
-            features["IatVRA"] = data_dir[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_IMPORT']].VirtualAddress
-        except (AttributeError, IndexError): pass
+        # Export table
+        ExportSize = pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].Size
+        ExportRVA = pe.OPTIONAL_HEADER.DATA_DIRECTORY[0].VirtualAddress
 
-        try:
-            # Resources (Index 2)
-            features["ResourceSize"] = data_dir[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE']].Size
-        except (AttributeError, IndexError): pass
+        # Import Address Table (IAT)
+        IatVRA = pe.OPTIONAL_HEADER.DATA_DIRECTORY[12].VirtualAddress
 
-        try:
-            # Debug info (Index 6)
-            features["DebugSize"] = data_dir[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_DEBUG']].Size
-            features["DebugRVA"] = data_dir[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_DEBUG']].VirtualAddress
-        except (AttributeError, IndexError): pass
+        # Resources
+        ResourceSize = pe.OPTIONAL_HEADER.DATA_DIRECTORY[2].Size
 
         # Bitcoin address detection
         with open(file_path, "rb") as f:
             content = f.read().decode('latin-1', errors='ignore')
 
         btc_matches = re.findall(r"([13][a-km-zA-HJ-NP-Z1-9]{25,34})", content)
-        features["BitcoinAddresses"] = len(set(btc_matches))
-        
-        pe.close()
-        return features
+        BitcoinAddresses = len(set(btc_matches))
 
-    except pefile.PEFormatError:
-        print("Error: Archivo no es un formato PE válido.")
-        return None
+        return {
+            "Machine": Machine,
+            "DebugSize": DebugSize,
+            "DebugRVA": DebugRVA,
+            "MajorImageVersion": MajorImageVersion,
+            "MajorOSVersion": MajorOSVersion,
+            "ExportRVA": ExportRVA,
+            "ExportSize": ExportSize,
+            "IatVRA": IatVRA,   # ← CORRECTO
+            "MajorLinkerVersion": MajorLinkerVersion,
+            "MinorLinkerVersion": MinorLinkerVersion,
+            "NumberOfSections": NumberOfSections,
+            "SizeOfStackReserve": SizeOfStackReserve,
+            "DllCharacteristics": DllCharacteristics,
+            "ResourceSize": ResourceSize,
+            "BitcoinAddresses": BitcoinAddresses
+        }
+
     except Exception as e:
         print("Error extrayendo metadatos:", e)
         return None

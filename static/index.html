@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Clasificador Ransomware</title>
+    <style>
+        body {
+            font-family: Arial;
+            max-width: 700px;
+            margin: 40px auto;
+        }
+
+        .card {
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        input,
+        button,
+        select {
+            padding: 10px;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        button {
+            background: #0044ff;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        button:hover {
+            background: #0033cc;
+        }
+
+        pre {
+            background: #f3f3f3;
+            padding: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔐 Clasificador de Ransomware</h1>
+    <p>Sube un archivo o ingresa los valores manualmente.</p>
+
+    <div class="card">
+        <h2>📁 Subir archivo EXE</h2>
+        <input type="file" id="fileInput" />
+        <button onclick="uploadFile()">Analizar archivo</button>
+    </div>
+
+    <div class="card">
+        <h2>✍️ Ingresar valores manualmente</h2>
+
+        <div id="manualFields"></div>
+        <button onclick="predictManual()">Clasificar Manual</button>
+    </div>
+
+    <div class="card">
+        <h2>Resultado</h2>
+        <pre id="result">Aquí aparecerá la respuesta...</pre>
+    </div>
+
+    <script>
+        // 🔥 URL REAL DE TU API:
+        const API_URL = "https://ia-s65i.onrender.com";
+
+        const fields = [
+            "Machine", "DebugSize", "DebugRVA", "MajorImageVersion", "MajorOSVersion",
+            "ExportRVA", "ExportSize", "IatVRA", "MajorLinkerVersion", "MinorLinkerVersion",
+            "NumberOfSections", "SizeOfStackReserve", "DllCharacteristics", "ResourceSize",
+            "BitcoinAddresses"
+        ];
+
+        window.onload = () => {
+            let html = "";
+            fields.forEach(f => {
+                html += `<label>${f}</label>
+                 <input type="number" id="${f}" placeholder="Ingresa ${f}">`;
+            });
+            document.getElementById("manualFields").innerHTML = html;
+        };
+
+        async function uploadFile() {
+            const fileInput = document.getElementById("fileInput");
+            if (!fileInput.files.length) return alert("Selecciona un archivo");
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            const res = await fetch(`${API_URL}/predict`, {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await res.json();
+            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function predictManual() {
+            const payload = {};
+            fields.forEach(f => payload[f] = Number(document.getElementById(f).value));
+
+            const res = await fetch(`${API_URL}/predict_manual`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+        }
+    </script>
+
+</body>
+
+</html>
