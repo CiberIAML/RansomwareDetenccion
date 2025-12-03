@@ -113,3 +113,18 @@ def frontend():
 
 # Carpeta de archivos estáticos
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# main.py (AGREGAR ESTO AL FINAL DEL ARCHIVO)
+
+# --------------------------
+# Configuración para servir el Frontend (index.html)
+# --------------------------
+
+# 1. Montar StaticFiles para CSS/JS/Imágenes si tuviera más archivos
+app.mount("/static", StaticFiles(directory="."), name="static")
+
+# 2. Ruta Raíz para devolver el index.html
+@app.get("/")
+async def serve_index():
+    return FileResponse('index.html')
+
