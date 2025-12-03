@@ -6,3 +6,4 @@ scikit-learn
 pefile
 imbalanced-learn
 python-multipart
+gunicorn
