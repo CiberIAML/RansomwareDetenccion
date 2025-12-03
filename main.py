@@ -100,16 +100,19 @@ def predict_manual(data: ManualInput):
 
     return {"prediction": label, "features": data.dict()}
 
+# main.py (AGREGAR ESTO AL FINAL DEL ARCHIVO)
 
-# ---------------------------
-# SERVIR FRONTEND
-# ---------------------------
+# --------------------------
+# Configuración para servir el Frontend (index.html)
+# --------------------------
 
-# Ruta principal → index.html
+# 1. Montar el directorio estático (para CSS, JS y el background.png)
+# 'directory="."' busca en la carpeta raíz del proyecto.
+app.mount("/static", StaticFiles(directory="."), name="static")
+
+# 2. Ruta Raíz ("/") para devolver el index.html
+# Esta ruta resuelve el error "Not Found"
 @app.get("/")
-def frontend():
-    return FileResponse("static/index.html")
-
-
-# Carpeta de archivos estáticos
-app.mount("/static", StaticFiles(directory="static"), name="static")
+async def serve_index():
+    # Devuelve el archivo index.html
+    return FileResponse('index.html')
