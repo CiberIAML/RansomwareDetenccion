@@ -3,310 +3,286 @@
 
 <head>
     <meta charset="UTF-8">
+    <title>Deteccion de Ransomware</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clasificador Ransomware</title>
     <style>
+        /* Estilos Globales */
         body {
-            font-family: Arial, sans-serif;
-            max-width: 750px;
-            margin: 40px auto;
-            background-color: #f7f7f7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh; /* Asegura que el body ocupe toda la altura */
+
+            /* --- Nuevos Estilos de Fondo --- */
+            /* Imagen de fondo de ciberseguridad (URL pública de placeholder) */
+            background-image: url('https://placehold.co/1920x1080/1a1a2e/ffffff?text=CYBER+SECURITY+BACKGROUND');
+            background-size: cover; /* Asegura que la imagen cubra todo el fondo */
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed; /* Mantiene la imagen fija al hacer scroll */
+            background-color: #1a1a2e; /* Color de fallback */
+            /* --------------------------------- */
         }
 
-        .card {
-            padding: 25px;
-            border: 1px solid #e0e0e0;
+        /* Contenedor Principal */
+        .container {
+            /* --- Contenedor Semi-Transparente --- */
+            background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco 90% opaco */
+            /* ------------------------------------ */
+            padding: 30px;
             border-radius: 12px;
-            margin-bottom: 25px;
-            background-color: #ffffff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada para contraste */
+            max-width: 950px; /* Ancho para las dos columnas */
+            width: 100%;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        
+        /* Tarjetas de Opción (Subir Archivo y Entrada Manual) */
+        .card {
+            background-color: rgba(255, 255, 255, 0.95); /* Ligeramente más opaco que el contenedor principal */
+            padding: 20px;
+            border: 1px solid rgba(204, 204, 204, 0.5); /* Borde semi-transparente */
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
         h1 {
             color: #007bff;
             text-align: center;
-        }
-        
-        h2 {
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            color: #555;
+            margin-bottom: 20px;
+            background-color: rgba(255, 255, 255, 0.9); /* Fondo para el título para mejor legibilidad */
+            padding: 10px;
+            border-radius: 8px;
         }
 
-        input[type="number"],
+        /* Contenedor de Opciones (Dos Columnas) */
+        .option-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 768px) {
+            .option-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
         input[type="file"],
-        button {
-            padding: 12px;
-            width: 100%;
-            margin-top: 10px;
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
-        
         input[type="number"],
-        input[type="file"] {
-            border: 1px solid #ccc;
-        }
-
         button {
-            background: #007bff;
-            border: none;
-            color: white;
-            cursor: pointer;
-            transition: background 0.3s, transform 0.1s;
-        }
-
-        button:hover:not(:disabled) {
-            background: #0056b3;
-        }
-        
-        button:disabled {
-            background: #a0c3ff;
-            cursor: not-allowed;
-        }
-
-        pre {
-            background: #f3f3f3;
-            padding: 15px;
+            padding: 10px;
+            width: 100%;
+            margin-top: 8px;
             border-radius: 8px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-size: 0.9em;
-            overflow-x: auto;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
         }
 
         label {
             display: block;
-            margin-top: 15px;
-            font-weight: bold;
-            color: #444;
-        }
-        
-        #messageBox {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            display: none; /* Oculto por defecto */
+            margin-top: 10px;
             font-weight: bold;
         }
 
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        /* Estilos de Botones */
+        .btn-primary {
+            background: #007bff;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
         }
         
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .btn-secondary {
+            background: #6c757d;
+            border: none;
+            color: white;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: background 0.3s ease;
         }
         
-        .ransomware {
-             background-color: #ffe0b2; /* Naranja Suave */
-             color: #ff5722; /* Naranja Oscuro */
-             border: 1px solid #ff9800;
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Área de resultado */
+        #result-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(240, 240, 240, 0.95); /* Semi-transparente */
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            word-wrap: break-word;
         }
         
-        .loading {
-             animation: pulse 1s infinite alternate;
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
         
-        @keyframes pulse {
-            from { opacity: 1; }
-            to { opacity: 0.7; }
+        /* Estilo para el pie de página */
+        footer {
+            margin-top: 30px;
+            padding: 10px;
+            text-align: center;
+            width: 100%;
+            max-width: 950px;
+            color: #fff; /* Texto blanco para el fondo oscuro */
+            background-color: rgba(0, 0, 0, 0.6); /* Fondo semi-transparente oscuro */
+            border-radius: 8px;
         }
+
     </style>
 </head>
 
 <body>
-    <h1>🔐 Clasificador de Ransomware</h1>
-    <p style="text-align: center; color: #666;">Sube un archivo PE (EXE/DLL) o ingresa los valores de las características manualmente.</p>
+    <div class="container">
+        <h1>🔐 Clasificador de Ransomware (Análisis PE)</h1>
+        <p style="text-align: center; font-style: italic;">Sube un archivo ejecutable (EXE) o ingresa los valores de las características PE manualmente.</p>
 
-    <div id="messageBox"></div>
+        <div class="option-container">
 
-    <div class="card">
-        <h2>📁 Subir archivo PE</h2>
-        <input type="file" id="fileInput" accept=".exe,.dll" required>
-        <button onclick="uploadFile()" id="uploadButton">Clasificar Archivo</button>
-    </div>
-
-    <div class="card">
-        <h2>🔢 Entrada Manual de Características</h2>
-        <form id="manualInputForm">
-            <div id="manualFields">
-                <!-- Los campos de entrada se generarán aquí por JavaScript -->
+            <!-- Columna 1: Subir Archivo -->
+            <div class="card">
+                <h2>📁 Subir archivo PE</h2>
+                <form id="file-upload-form">
+                    <input type="file" id="fileInput" accept=".exe, .dll">
+                    <button class="btn-primary" type="button" onclick="uploadFile()">Clasificar Archivo</button>
+                    <button class="btn-secondary" type="reset" onclick="clearFileForm()">Limpiar</button>
+                </form>
             </div>
-            <button type="button" onclick="predictManual()" id="manualButton">Clasificar Manualmente</button>
-        </form>
+
+            <!-- Columna 2: Entrada Manual -->
+            <div class="card">
+                <h2>✏️ Entrada Manual (Características PE)</h2>
+                <form id="manual-input-form">
+                    <div id="manualFields" class="grid-form">
+                        <!-- Los campos se insertarán aquí por JavaScript -->
+                    </div>
+                    <button class="btn-primary" type="button" onclick="predictManual()">Clasificar Manualmente</button>
+                    <button class="btn-secondary" type="reset" onclick="clearManualForm()">Limpiar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Área de Resultados -->
+        <div id="result-container">
+            <h2>Resultado de la Predicción</h2>
+            <!-- Este div muestra la predicción de Flask si se usa el backend de Flask/Jinja,
+                 pero en este entorno de prueba, usaremos solo el ID para el JSON de FastAPI -->
+            <pre id="result">Esperando análisis...</pre>
+        </div>
     </div>
 
-    <div class="card">
-        <h2>Resultado de la Clasificación (JSON)</h2>
-        <pre id="result">Esperando datos...</pre>
-    </div>
+    <footer>
+        <p>&copy; 2025 Detección de Ransomware en Archivos Ejecutables de Windows PE. Modelo de Machine Learning para fines académicos y de prueba.</p>
+    </footer>
 
     <script>
-        // Configuración de la API. Asume que la API está en la misma URL base.
-        const API_URL = ""; 
-
-        // Lista de características (debe coincidir con el backend)
+        // La URL de la API de FastAPI se asume accesible en el puerto 8000 en un entorno local,
+        // o en la misma raíz si está desplegado.
+        const API_URL = ""; // Si la API está en el mismo dominio
+        
         const fields = [
-            "Machine",
-            "DebugSize",
-            "DebugRVA",
-            "MajorImageVersion",
-            "MajorOSVersion",
-            "ExportRVA",
-            "ExportSize",
-            "IatVRA",
-            "MajorLinkerVersion",
-            "MinorLinkerVersion",
-            "NumberOfSections",
-            "SizeOfStackReserve",
-            "DllCharacteristics",
-            "ResourceSize",
+            "Machine", "DebugSize", "DebugRVA", "MajorImageVersion", "MajorOSVersion",
+            "ExportRVA", "ExportSize", "IatVRA", "MajorLinkerVersion", "MinorLinkerVersion",
+            "NumberOfSections", "SizeOfStackReserve", "DllCharacteristics", "ResourceSize",
             "BitcoinAddresses"
         ];
 
-        // Función para mostrar mensajes y errores
-        function showMessage(message, type = 'error') {
-            const msgBox = document.getElementById("messageBox");
-            msgBox.textContent = message;
-            msgBox.className = ''; // Limpia clases anteriores
-            msgBox.classList.add(type);
-            msgBox.style.display = 'block';
-            
-            // Ocultar después de 5 segundos si no es error crítico (como un error de red)
-            if (type === 'success' || type === 'ransomware') {
-                setTimeout(() => msgBox.style.display = 'none', 5000);
-            }
-        }
-        
-        // Función para limpiar el mensaje
-        function clearMessage() {
-            document.getElementById("messageBox").style.display = 'none';
-        }
-
-        // Generar campos de entrada manualmente al cargar la página
         window.onload = () => {
             let html = "";
             fields.forEach(f => {
-                // Se inicializan en 0 para evitar errores de validación de FastAPI
                 html += `<label for="${f}">${f}</label>
-                 <input type="number" id="${f}" name="${f}" placeholder="Ingresa valor para ${f}" value="0">`; 
+                 <input type="number" id="${f}" placeholder="Ingresa el valor de ${f}" value="0">`;
             });
             document.getElementById("manualFields").innerHTML = html;
         };
-        
-        // Función auxiliar para obtener el mensaje de error de la respuesta
-        async function getErrorMessage(res) {
-             try {
-                const errorData = await res.json();
-                
-                // Manejar errores de validación de Pydantic/FastAPI
-                if (errorData.detail && Array.isArray(errorData.detail)) {
-                    const validationErrors = errorData.detail.map(d => 
-                        `[${d.loc.join('.')}] - ${d.msg}`
-                    ).join('; ');
-                    return `Error de Validación (${res.status}): ${validationErrors}`;
-                }
-                
-                // Manejar errores definidos en el backend (ej: {"error": "..."})
-                if (errorData.error) {
-                    return `Error del Servidor: ${errorData.error}`;
-                }
-                
-                // Fallback para otros JSON
-                return `Error HTTP ${res.status}: ${JSON.stringify(errorData)}`;
-            } catch {
-                // Si la respuesta no es JSON (ej: error 500 HTML)
-                return `Error HTTP ${res.status}: ${res.statusText}. El servidor no devolvió una respuesta JSON válida.`;
-            }
+
+        // Función auxiliar para mostrar un mensaje personalizado en lugar de alert()
+        function showMessage(message, type = 'info') {
+            const resultContainer = document.getElementById('result-container');
+            resultContainer.innerHTML = `
+                <h2>Mensaje</h2>
+                <div style="padding: 15px; border-radius: 8px; margin-top: 10px; 
+                            background-color: ${type === 'error' ? '#f8d7da' : '#d1ecf1'};
+                            color: ${type === 'error' ? '#721c24' : '#0c5460'};
+                            border: 1px solid ${type === 'error' ? '#f5c6cb' : '#bee5eb'};">
+                    ${message}
+                </div>
+            `;
         }
 
-        // Función para subir y clasificar archivo
+        // Función para subir y clasificar un archivo
         async function uploadFile() {
-            clearMessage();
-            document.getElementById("result").textContent = "Enviando archivo...";
             const fileInput = document.getElementById("fileInput");
-            const button = document.getElementById("uploadButton");
+            if (!fileInput.files.length) return showMessage("Por favor, selecciona un archivo EXE o DLL para clasificar.", 'error');
             
-            if (!fileInput.files.length) {
-                return showMessage("❌ ERROR: Debes seleccionar un archivo para clasificar.", 'error');
-            }
-            
-            button.disabled = true;
-            button.textContent = "Clasificando... ⏳";
-            button.classList.add('loading');
+            showMessage("Clasificando archivo... por favor espera.");
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
 
             try {
-                const formData = new FormData();
-                formData.append("file", fileInput.files[0]);
-
                 const res = await fetch(`${API_URL}/predict`, {
                     method: "POST",
                     body: formData
                 });
-                
-                // Verificar si la respuesta fue exitosa (status 200-299)
-                if (!res.ok) {
-                    const errorMessage = await getErrorMessage(res);
-                    showMessage(`❌ Error en la predicción del archivo: ${errorMessage}`, 'error');
-                    return;
-                }
 
-                // Procesar respuesta exitosa
                 const data = await res.json();
                 
-                // Mostrar la predicción en el cuadro de resultados
-                document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+                if (res.status !== 200) {
+                     showMessage(`Error en la API: ${data.error || 'Desconocido'}`, 'error');
+                     return;
+                }
                 
-                const label = data.prediction || "N/A";
-                const color = label === "benign" ? 'success' : 'ransomware';
-                showMessage(`✅ Predicción Exitosa. Resultado: ${label.toUpperCase()}`, color);
+                const predictionLabel = data.prediction === 'benign' 
+                    ? `✅ Archivo Benigno (Puntuación: ${data.prediction})` 
+                    : `🔴 ¡POSIBLE MALWARE! (Ransomware) (Puntuación: ${data.prediction})`;
 
+                document.getElementById("result").innerHTML = `
+                    <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; color: ${data.prediction === 'benign' ? 'green' : 'red'};">
+                        ${predictionLabel}
+                    </div>
+                    <strong>Características PE extraídas:</strong>
+                    <pre style="background: #f3f3f3; padding: 15px; border-radius: 8px;">${JSON.stringify(data.features, null, 2)}</pre>
+                `;
             } catch (e) {
-                // Error de red (fetch fail)
-                showMessage(`❌ Error de Conexión: No se pudo contactar con el servidor. (${e.message})`, 'error');
-            } finally {
-                button.disabled = false;
-                button.textContent = "Clasificar Archivo";
-                button.classList.remove('loading');
+                showMessage(`Error de conexión o proceso: ${e.message}. Asegúrate de que el backend está corriendo.`, 'error');
             }
         }
 
-        // Función para clasificar manualmente
+        // Función para clasificar valores manuales
         async function predictManual() {
-            clearMessage();
-            document.getElementById("result").textContent = "Enviando datos...";
-            const button = document.getElementById("manualButton");
             const payload = {};
-            let hasEmptyField = false;
-            let hasNaN = false;
-
-            // Recoger y validar datos
+            let allFieldsValid = true;
+            
             fields.forEach(f => {
-                const inputElement = document.getElementById(f);
-                // Si el campo está vacío o no es un número válido después de la conversión
-                if (inputElement.value === "" || inputElement.value === null) {
-                    hasEmptyField = true;
-                }
-                const numValue = Number(inputElement.value);
-                if (isNaN(numValue)) {
-                    hasNaN = true;
+                const value = document.getElementById(f).value;
+                const numValue = Number(value);
+                
+                if (value === "" || isNaN(numValue)) {
+                    allFieldsValid = false;
                 }
                 payload[f] = numValue;
             });
             
-            if (hasEmptyField || hasNaN) {
-                 return showMessage("❌ ERROR: Por favor, rellena todos los campos con valores numéricos válidos.", 'error');
-            }
+            if (!allFieldsValid) return showMessage("Por favor, completa todos los 15 campos numéricos para la clasificación manual.", 'error');
             
-            button.disabled = true;
-            button.textContent = "Clasificando... ⏳";
-            button.classList.add('loading');
+            showMessage("Clasificando valores manuales... por favor espera.");
+
 
             try {
                 const res = await fetch(`${API_URL}/predict_manual`, {
@@ -314,38 +290,41 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
-                
-                // Verificar si la respuesta fue exitosa (status 200-299)
-                if (!res.ok) {
-                    const errorMessage = await getErrorMessage(res);
-                    showMessage(`❌ Error en la predicción manual: ${errorMessage}`, 'error');
-                    return;
-                }
 
-                // Procesar respuesta exitosa
                 const data = await res.json();
                 
-                // Mostrar la predicción en el cuadro de resultados
-                document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+                if (res.status !== 200) {
+                     showMessage(`Error en la API: ${data.error || 'Desconocido'}`, 'error');
+                     return;
+                }
                 
-                const label = data.prediction || "N/A";
-                const color = label === "benign" ? 'success' : 'ransomware';
-                showMessage(`✅ Predicción Exitosa. Resultado: ${label.toUpperCase()}`, color);
+                const predictionLabel = data.prediction === 'benign' 
+                    ? `✅ Resultado Benigno (Puntuación: ${data.prediction})` 
+                    : `🔴 ¡POSIBLE MALWARE! (Ransomware) (Puntuación: ${data.prediction})`;
+
+                document.getElementById("result").innerHTML = `
+                    <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; color: ${data.prediction === 'benign' ? 'green' : 'red'};">
+                        ${predictionLabel}
+                    </div>
+                    <strong>Características PE enviadas:</strong>
+                    <pre style="background: #f3f3f3; padding: 15px; border-radius: 8px;">${JSON.stringify(data.features, null, 2)}</pre>
+                `;
 
             } catch (e) {
-                // Error de red (fetch fail)
-                showMessage(`❌ Error de Conexión: No se pudo contactar con el servidor. (${e.message})`, 'error');
-            } finally {
-                button.disabled = false;
-                button.textContent = "Clasificar Manualmente";
-                button.classList.remove('loading');
+                showMessage(`Error de conexión o proceso: ${e.message}. Asegúrate de que el backend está corriendo.`, 'error');
             }
         }
-    </script>
 
-    <footer>
-        <p style="text-align: center; margin-top: 30px; font-size: 0.8em; color: #999;">&copy; 2025 Detección de Ransomware en Archivos Ejecutables de Windows PE. Modelo de Machine Learning para fines académicos y de prueba. Desarrollado por Equipo TALENTO TECH.</p>
-    </footer>
+        function clearFileForm() {
+            document.getElementById('file-upload-form').reset();
+            showMessage("Archivos limpiados. Esperando nuevo análisis...");
+        }
+
+        function clearManualForm() {
+            document.getElementById('manual-input-form').reset();
+            showMessage("Campos de entrada manual limpiados. Esperando nuevo análisis...");
+        }
+    </script>
 
 </body>
 
