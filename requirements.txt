@@ -2,8 +2,10 @@ fastapi
 uvicorn
 pandas
 joblib
-scikit-learn
+scikit-learn==1.6.1
 pefile
 imbalanced-learn
 python-multipart
 gunicorn
+sqlalchemy
+psycopg2-binary
