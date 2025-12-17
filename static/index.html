@@ -109,6 +109,8 @@
         @keyframes spin{to{transform:rotate(360deg)}}
 
         .badge{display:inline-block;padding:6px 8px;background:#eef2ff;color:var(--primary);border-radius:999px;font-weight:600;font-size:12px}
+        .badge.online{background:#ecfdf5;color:#065f46}
+        .badge.offline{background:#fff1f2;color:#991b1b}
 
         @media (max-width: 900px) {
             .container{flex-direction:column}
@@ -155,6 +157,7 @@
             <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
                 <input type="text" id="apiInput" placeholder="http://localhost:5000" style="width:220px">
                 <button id="saveApiBtn" class="secondary" onclick="saveApiUrl()">Guardar</button>
+                <button id="checkApiBtn" class="secondary" onclick="checkApiHealth()">Probar API</button>
             </div>
         </div>
     </header>
@@ -281,8 +284,12 @@
         let lastResult = null;
 
         function updateApiBadge() {
-            document.getElementById('apiBadge').textContent = API_URL;
+            const badge = document.getElementById('apiBadge');
             document.getElementById('apiInput').value = API_URL === DEFAULT_API ? '' : API_URL;
+            badge.textContent = API_URL;
+            badge.classList.remove('online','offline');
+            // Lanzar una comprobación de salud en segundo plano (sin alertas)
+            checkApiHealth(false);
         }
 
         function saveApiUrl() {
@@ -348,7 +355,13 @@
                 setQuickResult(formatted);
 
             } catch (err) {
-                updateResult(`Error: ${err.message}`, true);
+                const m = err && err.message ? err.message : '';
+                if (m.includes('Failed to fetch') || err.name === 'AbortError') {
+                    updateResult(`Error: No se pudo conectar con la API en ${API_URL}. Revisa la URL o el estado del servidor.`, true);
+                    checkApiHealth(false);
+                } else {
+                    updateResult(`Error: ${err.message}`, true);
+                }
             } finally {
                 setLoading(btn, false);
             }
@@ -392,7 +405,13 @@
                 setQuickResult(formatted);
 
             } catch (err) {
-                updateResult(`Error: ${err.message}`, true);
+                const m = err && err.message ? err.message : '';
+                if (m.includes('Failed to fetch') || err.name === 'AbortError') {
+                    updateResult(`Error: No se pudo conectar con la API en ${API_URL}. Revisa la URL o el estado del servidor.`, true);
+                    checkApiHealth(false);
+                } else {
+                    updateResult(`Error: ${err.message}`, true);
+                }
             } finally {
                 setLoading(btn, false);
             }
@@ -411,6 +430,34 @@
         function setQuickResult(text){
             const el = document.getElementById('quickResult');
             if (el) el.textContent = text;
+        }
+
+        // Comprobación de salud de la API
+        async function checkApiHealth(showAlert = true) {
+            const badge = document.getElementById('apiBadge');
+            badge.textContent = 'Comprobando...';
+            badge.classList.remove('online','offline');
+            try {
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), 5000);
+                const res = await fetch(`${API_URL}/api`, { signal: controller.signal });
+                clearTimeout(id);
+                if (res.ok) {
+                    badge.textContent = API_URL;
+                    badge.classList.add('online');
+                    return true;
+                } else {
+                    badge.textContent = 'OFFLINE';
+                    badge.classList.add('offline');
+                    if (showAlert) alert(`API responded ${res.status}: ${await res.text().catch(()=>res.statusText)}`);
+                    return false;
+                }
+            } catch (err) {
+                badge.textContent = 'OFFLINE';
+                badge.classList.add('offline');
+                if (showAlert) alert(`No se puede conectar a la API en ${API_URL}: ${err.message}`);
+                return false;
+            }
         }
 
         function clearResult(){
@@ -442,6 +489,10 @@
                 });
             } catch (err) {
                 console.error('Error fetching comments:', err);
+                const msg = err && err.message ? err.message : '';
+                if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || err.name === 'AbortError') {
+                    checkApiHealth(false);
+                }
             }
         }
 
@@ -458,7 +509,13 @@
                 renderComments();
                 alert('Comentario guardado' + (data.email_sent ? ' y enviado por correo.' : ' (no se envió por falta de configuración SMTP)'));
             } catch (err) {
-                alert('Error: ' + err.message);
+                const msg = err && err.message ? err.message : '';
+                if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || err.name === 'AbortError') {
+                    alert('No se pudo conectar con la API en ' + API_URL + '. Revisa la URL arriba ("API actual") o comprueba que el servidor esté funcionando.');
+                    checkApiHealth(false);
+                } else {
+                    alert('Error: ' + err.message);
+                }
             } finally {
                 setLoading(btn, false);
             }
@@ -513,7 +570,7 @@
                 document.getElementById('statBenign').textContent = s.benign;
                 document.getElementById('statRansom').textContent = s.ransomware;
                 document.getElementById('statNA').textContent = s.not_applicable;
-            } catch (err) { console.error('Error fetching stats:', err); }
+            } catch (err) { console.error('Error fetching stats:', err); const msg = err && err.message ? err.message : ''; if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || err.name === 'AbortError') { checkApiHealth(false); } }
         }
 
         function downloadStats(){

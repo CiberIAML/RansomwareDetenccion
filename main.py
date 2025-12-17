@@ -20,6 +20,15 @@ from metadata_extractor import extract_metadata
 
 app = FastAPI()
 
+# Habilitar CORS para permitir peticiones desde el frontend (ajusta allow_origins en producción)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],            # Cambiar por tu dominio en producción
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # ---------------------------
 # Cargar el modelo
 # ---------------------------
