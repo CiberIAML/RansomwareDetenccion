@@ -11,6 +11,7 @@ import sqlite3
 import smtplib
 from email.message import EmailMessage
 from typing import Optional
+import logging
 
 from metadata_extractor import extract_metadata
 
@@ -45,11 +46,11 @@ def load_model():
         # Intentamos usar mmap_mode para mapas de memoria si el modelo lo soporta
         try:
             model = joblib.load("model.pkl", mmap_mode='r')
-            print('Model loaded with mmap_mode')
+            logging.info('Model loaded with mmap_mode')
         except TypeError:
             # mmap_mode no soportado por versiones antiguas / tipos
             model = joblib.load("model.pkl")
-            print('Model loaded without mmap_mode')
+            logging.info('Model loaded without mmap_mode')
     except Exception as e:
         print('Error loading model:', e)
         # Re-raise para que los handlers de endpoints puedan notificar correctamente
@@ -240,8 +241,30 @@ def send_comment_email(text: str) -> bool:
         return False
 
 
-# Inicializar DB al iniciar la app
-init_db()
+# Inicializar DB y hacer comprobaciones al iniciar la app
+@app.on_event("startup")
+def on_startup():
+    logging.info("Startup: initializing application")
+    # Inicializar la base de datos de forma segura
+    try:
+        init_db()
+        logging.info("Database initialized successfully")
+    except Exception as e:
+        logging.exception("Database initialization failed: %s", e)
+
+    # Información sobre el archivo del modelo (sin cargarlo)
+    try:
+        from pathlib import Path
+        p = Path("model.pkl")
+        if p.exists():
+            st = p.stat()
+            logging.info("Model file present: size=%d bytes, mtime=%s", st.st_size, st.st_mtime)
+        else:
+            logging.warning("Model file 'model.pkl' not found at startup")
+    except Exception as e:
+        logging.exception("Error checking model file metadata: %s", e)
+
+    logging.info("Startup complete")
 
 # ---------------------------
 # ENDPOINTS API
