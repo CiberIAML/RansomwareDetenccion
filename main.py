@@ -30,10 +30,36 @@ app.add_middleware(
 )
 
 # ---------------------------
-# Cargar el modelo
+# Cargar el modelo (lazy load para evitar tiempos largos/uso de memoria al arrancar)
 # ---------------------------
 
-model = joblib.load("model.pkl")
+model = None
+
+def load_model():
+    """Carga el modelo desde disco. Usa mmap_mode cuando sea posible para reducir memoria.
+    Se invoca de forma perezosa en la primera petición."""
+    global model
+    if model is not None:
+        return
+    try:
+        # Intentamos usar mmap_mode para mapas de memoria si el modelo lo soporta
+        try:
+            model = joblib.load("model.pkl", mmap_mode='r')
+            print('Model loaded with mmap_mode')
+        except TypeError:
+            # mmap_mode no soportado por versiones antiguas / tipos
+            model = joblib.load("model.pkl")
+            print('Model loaded without mmap_mode')
+    except Exception as e:
+        print('Error loading model:', e)
+        # Re-raise para que los handlers de endpoints puedan notificar correctamente
+        raise
+
+
+def get_model():
+    if model is None:
+        load_model()
+    return model
 
 FEATURE_COLUMNS = [
     "Machine",
@@ -240,7 +266,8 @@ async def predict(file: UploadFile = File(...)):
 
         df = pd.DataFrame([data], columns=FEATURE_COLUMNS)
         try:
-            pred = model.predict(df)[0]
+            m = get_model()
+            pred = m.predict(df)[0]
         except Exception as e:
             # registrar error en test
             insert_event('test_error')
@@ -263,7 +290,8 @@ def predict_manual(data: ManualInput):
 
     df = pd.DataFrame([data.dict()], columns=FEATURE_COLUMNS)
     try:
-        pred = model.predict(df)[0]
+        m = get_model()
+        pred = m.predict(df)[0]
     except Exception as e:
         insert_event('test_error')
         raise HTTPException(status_code=500, detail=f"Error al predecir: {e}")
@@ -315,6 +343,28 @@ def visit():
 @app.get('/stats')
 def stats():
     return get_stats_from_db()
+
+
+# ---------------------------
+# Model status (no carga del modelo)
+# ---------------------------
+from pathlib import Path
+
+@app.get('/model_status')
+def model_status():
+    """Devuelve metadata de `model.pkl` y si el modelo está ya cargado en memoria.
+    NO intenta cargar el modelo en disco (safe read-only check).
+    """
+    p = Path("model.pkl")
+    info = { 'exists': p.exists() }
+    if p.exists():
+        try:
+            st = p.stat()
+            info.update({ 'size': st.st_size, 'mtime': st.st_mtime })
+        except Exception as e:
+            info.update({ 'stat_error': str(e) })
+    return { 'model': info, 'loaded_in_memory': model is not None }
+
 
 
 # ---------------------------

@@ -18,4 +18,20 @@ Sistema desarrollado en Python que permite identificar posibles amenazas de rans
 
 - Procesamiento rápido y eficiente
 
+## Tablero y estado del modelo 🔍
+
+- **Comprobación de salud de la API:** La interfaz incluye un botón **"Probar API"** (junto a "Guardar") que llama a `GET /api` para verificar si el backend está conectado; también existe el endpoint `GET /api` que devuelve `{ "message": "API funcionando correctamente" }`.
+
+- **Estado del modelo:** Añadimos `GET /model_status` que devuelve información segura sobre `model.pkl` sin intentar cargarlo (ejemplo de respuesta: `{ "model": {"exists": true, "size": 123456, "mtime": 1700000000.0}, "loaded_in_memory": false }`). Útil para comprobar que el fichero del modelo está presente y ver si ya fue cargado en memoria.
+
+- **Pruebas locales rápidas:**
+  1. pip install -r requirements.txt
+  2. uvicorn main:app --reload
+  3. Abrir http://localhost:8000/ y usar **Probar API** o consultar `http://localhost:8000/model_status`.
+
+- **Despliegue en Render:** Después de push, revisa los logs de deploy (Build & Runtime). Si ves mensajes `Worker (pid) was sent SIGTERM`, revisa la carga del modelo y considera aumentar timeout o memoria; el repositorio ya contiene mitigaciones (lazy-load y reducción a 1 worker en `render.yaml`).
+
+---
+
+
 
