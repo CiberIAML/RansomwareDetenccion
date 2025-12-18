@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
 import joblib
@@ -52,7 +53,7 @@ def load_model():
             model = joblib.load("model.pkl")
             logging.info('Model loaded without mmap_mode')
     except Exception as e:
-        print('Error loading model:', e)
+        logging.exception('Error loading model: %s', e)
         # Re-raise para que los handlers de endpoints puedan notificar correctamente
         raise
 
@@ -237,7 +238,7 @@ def send_comment_email(text: str) -> bool:
                 server.send_message(msg)
         return True
     except Exception as e:
-        print('Error sending email:', e)
+        logging.exception('Error sending email: %s', e)
         return False
 
 
