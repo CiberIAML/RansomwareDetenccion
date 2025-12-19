@@ -23,6 +23,13 @@ Este documento resume los pasos y variables que recomendamos configurar al despl
   4. **Revisar logs de runtime:** en Render, mira tanto los logs de deploy (build) como los de runtime; si ves `MemoryError` o excepciones durante import, considera optimizar imports (carga perezosa) o subir a un plan con más memoria.
   5. **Comprobación de salud temprana:** `healthCheckPath: /api` verifica que el servicio responde; `GET /model_status` es útil para verificar la presencia de `model.pkl` sin cargarlo.
 
+## Administración y comentarios
+- **Exportar comentarios (JSON/CSV)** y **Descargar resultado** se han marcado como **solo para administrador** y están ocultos por defecto. Para ver las opciones de administración en la interfaz, abre el diálogo "Admin" (botón **Admin** en el header) e introduce el valor de la variable de entorno `ADMIN_TOKEN` (configurada en Render como variable de entorno). Tras validar el token, las acciones de administración estarán visibles.
+- **Los comentarios son permanentes por defecto**, pero existe un endpoint administrativo (`POST /admin/comments/clear`) que permite borrar todo el historial si se dispone del token admin. Usa esta operación con mucha cautela y solo con permisos administrativos.
+- **Cómo establecer `ADMIN_TOKEN` en Render:** en el panel de Environment variables de tu servicio añade `ADMIN_TOKEN` con un token seguro (p.ej. una cadena larga y difícil de adivinar). No incluyas este token en el repositorio.
+
+***
+
 ## Comandos útiles
 - Restart manual del servicio en Render (panel) y revisar logs tras cada deploy.
 - Localmente prueba:

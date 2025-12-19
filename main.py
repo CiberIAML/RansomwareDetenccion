@@ -212,6 +212,16 @@ SMTP_USER = os.getenv('SMTP_USER')
 SMTP_PASS = os.getenv('SMTP_PASS')
 DEST_EMAIL = os.getenv('DEST_EMAIL')
 
+# Token para administración: si se define ADMIN_TOKEN, las rutas administrativas requerirán este token
+ADMIN_TOKEN = os.getenv('ADMIN_TOKEN')
+
+def _check_admin_token(token: str) -> bool:
+    """Comprueba el token del administrador contra la variable de entorno.
+    Devuelve True solo si ADMIN_TOKEN está definido y coincide con el token proporcionado."""
+    if not ADMIN_TOKEN:
+        return False
+    return bool(token) and token == ADMIN_TOKEN
+
 
 def send_comment_email(text: str) -> bool:
     if not SMTP_HOST or not SMTP_PORT or not DEST_EMAIL:
@@ -352,10 +362,59 @@ def get_comments(limit: Optional[int] = 50):
     return get_comments_from_db(limit)
 
 
-@app.post('/comments/clear')
-def clear_comments():
+# ---------------------------
+# ADMIN endpoints (protected by ADMIN_TOKEN)
+# To call these endpoints, set an HTTP header `X-Admin-Token: <token>` where `<token>` equals the
+# environment variable `ADMIN_TOKEN` configured on the server. If `ADMIN_TOKEN` is not set, admin
+# endpoints will return 403 Forbidden.
+# ---------------------------
+from fastapi import Header
+
+@app.get('/admin/auth')
+def admin_auth(x_admin_token: Optional[str] = Header(None)):
+    """Valida el token de administrador. Retorna 200 OK si el token es válido."""
+    if not _check_admin_token(x_admin_token):
+        raise HTTPException(status_code=403, detail='Invalid admin token')
+    return {'ok': True}
+
+
+@app.get('/admin/comments/export')
+def admin_export_comments(x_admin_token: Optional[str] = Header(None)):
+    """Exportar comentarios en JSON (administrador). Requiere cabecera `X-Admin-Token`."""
+    if not _check_admin_token(x_admin_token):
+        raise HTTPException(status_code=403, detail='Invalid admin token')
+    comments = get_comments_from_db(limit=10000)
+    return JSONResponse(comments)
+
+
+@app.get('/admin/comments/export_csv')
+def admin_export_comments_csv(x_admin_token: Optional[str] = Header(None)):
+    """Exportar comentarios en CSV (administrador). Requiere cabecera `X-Admin-Token`."""
+    if not _check_admin_token(x_admin_token):
+        raise HTTPException(status_code=403, detail='Invalid admin token')
+    import csv
+    import io
+    comments = get_comments_from_db(limit=10000)
+    output = io.StringIO()
+    w = csv.writer(output)
+    w.writerow(['timestamp','text','email_sent'])
+    for c in comments:
+        w.writerow([c['ts'], c['text'], int(c.get('email_sent', False))])
+    # Use StreamingResponse for in-memory CSV
+    from fastapi.responses import StreamingResponse
+    return StreamingResponse(iter([output.getvalue().encode('utf-8')]), media_type='text/csv', headers={'Content-Disposition':'attachment; filename="comments.csv"'})
+
+
+@app.post('/admin/comments/clear')
+def admin_clear_comments(x_admin_token: Optional[str] = Header(None)):
+    """Borrar todos los comentarios (administrador). Requiere cabecera `X-Admin-Token` y uso cauteloso."""
+    if not _check_admin_token(x_admin_token):
+        raise HTTPException(status_code=403, detail='Invalid admin token')
     clear_comments_db()
     return {'ok': True}
+
+
+# End admin endpoints
 
 
 @app.post('/visit')
