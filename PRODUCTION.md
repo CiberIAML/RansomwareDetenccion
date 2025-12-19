@@ -9,18 +9,28 @@ Este documento resume los pasos y variables que recomendamos configurar al despl
 - `RENDER_EXTERNAL_URL` o similar: no requerido, pero útil para configurar notificaciones.
 
 ## Recomendaciones
-1. No subir `model.pkl` al repositorio si es sensible (añadir a `.gitignore`). En su lugar, sube el archivo a un storage seguro y descarga en el build o carga desde una URL segura.
-2. Ajusta la cantidad de workers y tiempo de espera en Render si el proceso de carga del modelo requiere más tiempo o memoria.
-3. Habilita variables de entorno `SMTP_*` solo si quieres recibir notificaciones por correo.
+1. No subir `model.pkl` al repositorio si es sensible (añádelo a `.gitignore`). En su lugar, sube el archivo a un storage seguro y descárgalo en el build o carga desde una URL segura.
+2. Ajusta la cantidad de workers y tiempo de espera: para despliegues en Render se recomienda usar Gunicorn con Uvicorn workers y un timeout mayor (ej. 120s) cuando el proceso de arranque puede tardar o si dependencias pesadas se instalan. En `render.yaml` ya sugerimos ese cambio.
+3. Si la aplicación consume mucha memoria al importar paquetes (pandas / scikit-learn), reduce a **1 worker** y considera aumentar el plan de instancia en Render (la instancia free es muy limitada).
+4. Habilita variables de entorno `SMTP_*` solo si quieres recibir notificaciones por correo.
 
-## Comandos para ver logs y debug
-- Revisa logs de deploy en el panel de Render.
-- Revisa logs de runtime (stdout/stderr) para ver errores de inicialización o carga del modelo.
+## Diagnóstico y pasos para corregir el error "Worker was sent SIGTERM / Timed Out"
+- Causa frecuente: el worker no responde durante el tiempo de espera del servicio (timeout) o se queda corto de memoria.
+- Pasos recomendados:
+  1. **Aumentar timeout:** usa Gunicorn y especifica `--timeout 120` (ya aplicado en `render.yaml`).
+  2. **Reducir workers:** mantener `--workers 1` si hay poca memoria.
+  3. **Revisar dependencias:** instala versiones ligeras y evita compilaciones largos durante build; revisa la salida del build para detectar pasos lentos.
+  4. **Revisar logs de runtime:** en Render, mira tanto los logs de deploy (build) como los de runtime; si ves `MemoryError` o excepciones durante import, considera optimizar imports (carga perezosa) o subir a un plan con más memoria.
+  5. **Comprobación de salud temprana:** `healthCheckPath: /api` verifica que el servicio responde; `GET /model_status` es útil para verificar la presencia de `model.pkl` sin cargarlo.
 
-## Pasos rápidos para desplegar
-1. Empuja tu repo a GitHub.
-2. Crea nuevo servicio en Render conectando a tu repo.
-3. Configura las variables de entorno y el build command (ej: `pip install -r requirements.txt` y `uvicorn main:app --host 0.0.0.0 --port $PORT`).
-4. Revisa el build y luego el servicio en Runtime. Si la app se cae en startup, revisa los logs y el tamaño del proceso.
+## Comandos útiles
+- Restart manual del servicio en Render (panel) y revisar logs tras cada deploy.
+- Localmente prueba:
+  ```bash
+  pip install -r requirements.txt
+  gunicorn -k uvicorn.workers.UvicornWorker main:app -b 0.0.0.0:8000 --timeout 120 --workers 1 --log-level debug
+  ```
+
+---
 
 ---

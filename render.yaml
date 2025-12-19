@@ -4,7 +4,9 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level debug
+    # Use Gunicorn with Uvicorn worker and a longer timeout to avoid worker SIGTERM during startup
+    # Gunicorn handles timeout and worker lifecycle more robustly on Render
+    startCommand: gunicorn -k uvicorn.workers.UvicornWorker main:app -b 0.0.0.0:$PORT --timeout 120 --workers 1 --log-level debug
     envVars:
       - key: SMTP_HOST
         value: ""
