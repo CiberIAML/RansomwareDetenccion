@@ -10,9 +10,11 @@
         html,body{height:100%}
         body {
             font-family: Inter, Arial, sans-serif;
-            max-width: 1100px;
-            margin: 20px auto;
-            padding: 0 14px;
+            max-width: none;
+            width: 100%;
+            margin: 0;
+            padding: 20px 40px;
+            box-sizing: border-box;
             color:var(--text);
             background: #fbfdff;
         }
@@ -248,7 +250,7 @@
         <textarea id="commentInput" rows="5" placeholder="Escribe observaciones sobre la prueba..."></textarea>
         <div class="controls">
             <button id="saveCommentBtn" onclick="saveComment()">Enviar  comentario</button>
-            <button class="secondary" onclick="clearComments()">Limpiar historial o nuevo</button>
+            <button class="secondary" data-admin="true" onclick="clearComments()">Limpiar historial o nuevo</button>
         </div>
 
         <div style="display:flex;gap:8px;margin-top:8px">
@@ -263,8 +265,8 @@
     </div>
 
     <script>
-        // API URL: se guarda en localStorage para pruebas locales
-        const DEFAULT_API = "https://ransomwaredetenccion.onrender.com";
+        // API URL: por defecto usa el mismo origen (útil en despliegues). El usuario puede sobrescribirlo en el campo "API actual".
+        const DEFAULT_API = window.location.origin;
         let API_URL = localStorage.getItem('api_url') || DEFAULT_API;
 
         const fields = [
@@ -587,6 +589,13 @@
             fetch(`${API_URL}/visit`, { method: 'POST' }).catch(()=>{});
             renderComments();
             fetchStats();
+
+            // ocultar botones de administración por defecto; añadir '?admin=1' a la URL para activarlos (guardado en localStorage)
+            if (!isAdmin()) {
+                document.querySelectorAll('[data-admin="true"]').forEach(el => el.style.display = 'none');
+            } else {
+                console.log('Admin mode enabled — botones de administración visibles');
+            }
         };
     </script>
 
