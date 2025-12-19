@@ -6,20 +6,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Clasificador Ransomware</title>
     <style>
-        :root{--bg:#ffffff;--text:#0f1724;--muted:#64748b;--accent:#0b63ff;--card:#ffffff}
+        :root{--bg:#f4f8ff;--text:#0f1724;--muted:#64748b;--primary:#1e6fff;--card:#ffffff}
         html,body{height:100%}
         body {
             font-family: Inter, Arial, sans-serif;
             max-width: none;
             width: 100%;
             margin: 0;
-            padding: 20px 40px;
+            padding: 24px 36px;
             box-sizing: border-box;
             color:var(--text);
-            background: #fbfdff;
+            background: linear-gradient(180deg, #f7fbff 0%, #f4f8ff 100%);
         }
 
         /* Hero images */
+        header{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:20px;text-align:center;background:linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.8));padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(30,79,255,0.06)}
+        header h1{font-size:22px;margin:0;color:var(--primary)}
+        header p{margin:0;color:var(--muted);font-size:13px} 
+        header div[style]{display:flex;gap:12px;align-items:center}
+
+        .hero {text-align:center}
+        .hero-images{display:flex;gap:18px;justify-content:center;align-items:center}
+        .hero-placeholder{width:120px;height:88px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(30,111,255,0.08), rgba(30,111,255,0.03));color:var(--primary);font-weight:700;box-shadow:0 1px 6px rgba(14,30,80,0.04)}
+        .hero-images figcaption{margin-top:6px;font-size:12px;color:var(--muted)}
         .hero {text-align:center}
         .hero-images{display:flex;gap:10px;justify-content:center;align-items:center}
         .hero-images figure{margin:0;text-align:center}
@@ -155,13 +164,13 @@
             <p class="small">Sube un EXE o completa los campos manuales para evaluar si un archivo parece ransomware.</p>
         </div>
         <div style="margin-left:auto;text-align:right">
-            <div class="small">API actual:<br><span id="apiBadge" class="badge">--</span></div>
+            <div class="small">Estado del modelo:<br><span id="apiBadge" class="badge">Revisar archivo / modelo</span></div>
             <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
                 <input type="text" id="apiInput" placeholder="http://localhost:5000" style="width:220px">
                 <button id="saveApiBtn" class="secondary" onclick="saveApiUrl()">Guardar</button>
-                <button id="checkApiBtn" class="secondary" onclick="checkApiHealth()">Probar API</button>
+                <button id="checkApiBtn" class="secondary" onclick="checkApiHealth()">Comprobar</button>
             </div>
-        </div>
+        </div> 
     </header>
 
     <div class="container">
@@ -173,16 +182,16 @@
 
           <div class="hero-images" role="presentation">
             <figure>
-              <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=60&auto=format&fit=crop" loading="lazy" alt="Representación de inteligencia artificial" />
+              <div class="hero-placeholder">IA</div>
               <figcaption>IA & modelos</figcaption>
             </figure>
             <figure>
-              <img src="https://images.unsplash.com/photo-1508385082359-fbc0b8a1f9a1?w=800&q=60&auto=format&fit=crop" loading="lazy" alt="Machine learning" />
-              <figcaption>Machine Learning</figcaption>
+              <div class="hero-placeholder">ML</div>
+              <figcaption>Modelos</figcaption>
             </figure>
             <figure>
-              <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=60&auto=format&fit=crop" loading="lazy" alt="Data y features" />
-              <figcaption>Data & features</figcaption>
+              <div class="hero-placeholder">Data</div>
+              <figcaption>Features</figcaption>
             </figure>
           </div>
         </div>
@@ -197,7 +206,7 @@
             <div class="controls">
                 <button id="uploadBtn" onclick="uploadFile()">Analizar archivo</button>
                 <button class="secondary" onclick="clearResult()">Limpiar resultado</button>
-                <button class="secondary" id="downloadResultBtn" onclick="downloadResult()">Descargar resultado</button>
+                <button class="secondary" id="downloadResultBtn" data-admin="true" onclick="downloadResult()">Descargar resultado</button>
             </div>
             <!-- Resultado rápido junto al upload -->
             <div style="margin-top:12px">
@@ -209,13 +218,7 @@
         <div class="card">
             <h2>✍️ Ingresar valores manualmente</h2>
 
-            <label for="presetSelect">Ejemplos rápidos</label>
-            <div class="row">
-                <select id="presetSelect">
-                    <option value="">-- Selecciona un ejemplo --</option>
-                </select>
-                <div style="width:120px"><button class="secondary" onclick="loadPreset()">Cargar</button></div>
-            </div>
+
 
             <div id="manualFields" aria-label="Campos manuales"></div>
             <div class="controls">
@@ -277,10 +280,7 @@
         ];
 
         // Ejemplos rápidos
-        const presets = {
-            "Ejemplo sospechoso": { Machine:1, DebugSize:0, DebugRVA:0, MajorImageVersion:0, MajorOSVersion:10, ExportRVA:0, ExportSize:0, IatVRA:1234, MajorLinkerVersion:9, MinorLinkerVersion:0, NumberOfSections:5, SizeOfStackReserve:8192, DllCharacteristics:0, ResourceSize:1, BitcoinAddresses:2 },
-            "Ejemplo benigno": { Machine:0, DebugSize:1000, DebugRVA:2000, MajorImageVersion:1, MajorOSVersion:6, ExportRVA:0, ExportSize:0, IatVRA:0, MajorLinkerVersion:6, MinorLinkerVersion:0, NumberOfSections:4, SizeOfStackReserve:4096, DllCharacteristics:64, ResourceSize:500, BitcoinAddresses:0 }
-        };
+
 
         // Estado de último resultado para descargar
         let lastResult = null;
@@ -310,11 +310,7 @@
             });
             document.getElementById("manualFields").innerHTML = html;
 
-            // cargar presets en select
-            const sel = document.getElementById('presetSelect');
-            Object.keys(presets).forEach(k => {
-                const o = document.createElement('option'); o.value = k; o.textContent = k; sel.appendChild(o);
-            });
+
         }
 
         function setLoading(el, isLoading) {
@@ -449,13 +445,13 @@
                     badge.classList.add('online');
                     return true;
                 } else {
-                    badge.textContent = 'OFFLINE';
+                    badge.textContent = 'Revisar archivo / modelo';
                     badge.classList.add('offline');
                     if (showAlert) alert(`API responded ${res.status}: ${await res.text().catch(()=>res.statusText)}`);
-                    return false;
+                    return false; 
                 }
             } catch (err) {
-                badge.textContent = 'OFFLINE';
+                badge.textContent = 'Revisar archivo / modelo';
                 badge.classList.add('offline');
                 if (showAlert) alert(`No se puede conectar a la API en ${API_URL}: ${err.message}`);
                 return false;
@@ -468,12 +464,7 @@
             lastResult = null;
         }
 
-        function loadPreset(){
-            const val = document.getElementById('presetSelect').value;
-            if (!val) return alert('Selecciona un ejemplo');
-            const preset = presets[val];
-            Object.keys(preset).forEach(k => { if (document.getElementById(k)) document.getElementById(k).value = preset[k]; });
-        }
+
 
         // Comentarios
         async function renderComments() {
@@ -598,6 +589,19 @@
             }
         };
     </script>
+
+    <!-- Footer profesional -->
+    <footer style="margin-top:28px;padding:20px 24px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.6));box-shadow:0 6px 18px rgba(14,30,80,0.04);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:6px">
+            <strong style="color:var(--primary);font-size:15px">Clasificador de Ransomware</strong>
+            <span class="small muted">Proyecto de detección de ransomware en ejecutables — uso responsable y fines educativos.</span>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center">
+            <a href="https://github.com/tu-usuario/tu-repo" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:var(--primary);font-weight:600">Ver en GitHub</a>
+            <a href="mailto:contacto@example.com" style="text-decoration:none;color:var(--muted)">contacto@example.com</a>
+            <span class="small muted">© 2025</span>
+        </div>
+    </footer>
 
 </body>
 

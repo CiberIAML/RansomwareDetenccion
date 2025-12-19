@@ -33,5 +33,34 @@ Sistema desarrollado en Python que permite identificar posibles amenazas de rans
 
 ---
 
+## Preparar y subir a GitHub
+
+Sigue estos pasos para subir el proyecto a GitHub (suponiendo que ya tienes Git y una cuenta configurada):
+
+1. Inicializa (si no está iniciado):
+
+   ```bash
+   git init
+   git add .
+   git commit -m "Inicial: proyecto clasificador ransomware"
+   ```
+
+2. Crea un repo en GitHub (por ejemplo `detencion-ransomware`) y añade el remoto:
+
+   ```bash
+   git remote add origin https://github.com/<tu-usuario>/<tu-repo>.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+3. Buenas prácticas antes del push:
+   - Asegúrate de que `model.pkl` no se suba (añádelo a `.gitignore` si corresponde).
+   - Incluye `stats.db` y otros ficheros generados en `.gitignore`.
+
+4. Archivos útiles que puedes añadir al repo:
+   - `PRODUCTION.md`: instrucciones de despliegue (Render, variables de entorno SMTP, DATABASE_URL, etc.).
+
+---
+
 
 
