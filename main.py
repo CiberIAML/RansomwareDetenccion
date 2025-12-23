@@ -60,16 +60,20 @@ app.add_middleware(
 # ---------------------------
 # Configuración de Base de Datos
 # ---------------------------
-DB_PATH = os.getenv('STATS_DB', 'stats.db')
-DATABASE_URL = os.getenv('DATABASE_URL')
+# 1. Obtener la URL de la variable de entorno que configuramos en Render
+# Si no existe (local), usará SQLite por defecto
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
-    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+    # Render usa 'postgres://', pero SQLAlchemy requiere 'postgresql://'
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    engine = create_engine(DATABASE_URL)
 else:
-    engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
+    # Para pruebas locales si no hay Postgres
+    engine = create_engine("sqlite:///stats.db", connect_args={"check_same_thread": False})
 
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
-Base = declarative_base()
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class Event(Base):
     __tablename__ = 'events'
