@@ -231,3 +231,22 @@ def frontend():
     return {"error": "index.html no encontrado en carpeta static"}
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# --- COLOCAR ESTO AL FINAL DE main.py ---
+
+# 1. Rutas de la API (Primero)
+@app.post("/predict")
+async def predict(file: UploadFile = File(...)):
+    try:
+        # Tu lógica de predicción aquí...
+        return {"prediction": "Benigno", "details": "..."}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# 2. Servir archivos estáticos (Segundo)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 3. Ruta principal (Último)
+@app.get("/")
+def frontend():
+    return FileResponse("static/index.html")
