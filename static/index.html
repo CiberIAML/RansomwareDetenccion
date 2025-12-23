@@ -23,21 +23,9 @@
         header h1{font-size:22px;margin:0;color:var(--primary)}
         header p{margin:0;color:var(--muted);font-size:13px} 
 
-        .container {
-            display: flex;
-            gap: 18px;
-            align-items: flex-start;
-        }
-
-        .sidebar-left, .sidebar-right {
-            width: 26%;
-            min-width: 220px;
-        }
-
-        .main {
-            width: 48%;
-            min-width: 420px;
-        }
+        .container { display: flex; gap: 18px; align-items: flex-start; }
+        .sidebar-left, .sidebar-right { width: 26%; min-width: 220px; }
+        .main { width: 48%; min-width: 420px; }
 
         .card {
             padding: 16px;
@@ -50,66 +38,38 @@
         }
 
         label{display:block;font-weight:600;margin-top:10px;font-size:13px}
-
         input, button, select, textarea {
-            padding: 10px;
-            width: 100%;
-            margin-top: 8px;
-            box-sizing: border-box;
-            font-size: 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            background: #fff;
+            padding: 10px; width: 100%; margin-top: 8px; box-sizing: border-box;
+            font-size: 14px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff;
         }
 
         button {
-            background: var(--primary);
-            border: none;
-            color: white;
-            cursor: pointer;
-            border-radius: 8px;
-            padding: 10px 12px;
-            font-weight:600;
-            transition: background 0.2s;
+            background: var(--primary); border: none; color: white; cursor: pointer;
+            border-radius: 8px; padding: 10px 12px; font-weight:600; transition: background 0.2s;
         }
-
         button:hover { background: #165ed9; }
         button.secondary{background:#f3f4f6;color:#111;border:1px solid #e5e7eb}
-        button.secondary:hover{background:#e5e7eb}
-        button:disabled{opacity:0.6;cursor:default}
+        button:disabled{opacity:0.6;cursor:not-allowed}
 
         pre {
-            background: #0f1724;
-            color: #e6eef8;
-            padding: 14px;
-            border-radius:8px;
-            font-size:13px;
-            max-height:320px;
-            overflow:auto;
-            white-space: pre-wrap;
-            word-break: break-all;
+            background: #0f1724; color: #e6eef8; padding: 14px; border-radius:8px;
+            font-size:13px; max-height:320px; overflow:auto; white-space: pre-wrap; word-break: break-all;
         }
 
         .controls{display:flex;gap:8px;margin-top:12px}
-
-        /* Spinner */
         .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-radius:50%;border-top-color:#fff;animation:spin .8s linear infinite;margin-right:8px}
         @keyframes spin{to{transform:rotate(360deg)}}
 
         .visual-result{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(14,30,80,0.04);box-shadow:0 4px 12px rgba(14,30,80,0.03)}
         .visual-result .emoji{font-size:34px}
-        .visual-result .msg{font-weight:700;font-size:15px}
-        .visual-result.benign{border-left:4px solid #16a34a;background:linear-gradient(90deg, rgba(22,163,74,0.05), rgba(255,255,255,0.0))}
-        .visual-result.ransomware{border-left:4px solid #f97316;background:linear-gradient(90deg, rgba(249,115,22,0.04), rgba(255,255,255,0.0))}
+        .visual-result.benign{border-left:4px solid #16a34a;}
+        .visual-result.ransomware{border-left:4px solid #f97316;}
 
         .badge{display:inline-block;padding:4px 10px;background:#eef2ff;color:var(--primary);border-radius:999px;font-weight:600;font-size:11px}
         .badge.online{background:#ecfdf5;color:#065f46}
         .badge.offline{background:#fff1f2;color:#991b1b}
 
-        @media (max-width: 900px) {
-            .container{flex-direction:column}
-            .sidebar-left,.sidebar-right,.main{width:100%}
-        }
+        @media (max-width: 900px) { .container{flex-direction:column} .sidebar-left,.sidebar-right,.main{width:100%} }
     </style>
 </head>
 
@@ -120,18 +80,17 @@
             <p>Sube un EXE o completa los campos manuales para la detección por Machine Learning.</p>
         </div>
         <div style="margin-left:auto;text-align:right">
-            <div class="small" style="font-size: 11px; color: var(--muted)">Estado API:<br><span id="apiBadge" class="badge">Iniciando...</span></div>
+            <div class="small" style="font-size: 11px; color: var(--muted)">Estado API:<br><span id="apiBadge" class="badge">Listo</span></div>
             <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
                 <input type="text" id="apiInput" placeholder="URL de la API" style="width:180px; margin:0; padding:6px">
-                <button id="saveApiBtn" class="secondary" onclick="saveApiUrl()" style="padding:6px 10px">OK</button>
-                <button id="openAdminBtn" class="secondary" onclick="openAdminModal()" style="padding:6px 10px">Admin</button>
+                <button id="saveApiBtn" class="secondary" onclick="saveApiUrl()" style="padding:6px 10px; width:auto">OK</button>
+                <button id="openAdminBtn" class="secondary" onclick="openAdminModal()" style="padding:6px 10px; width:auto">Admin</button>
             </div> 
         </div> 
     </header>
 
     <div id="adminModal" style="display:none;position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#fff;padding:20px;border-radius:8px;box-shadow:0 10px 30px rgba(10,20,60,0.15);z-index:1000;min-width:320px">
         <h3 style="margin:0 0 8px">Acceso administrador</h3>
-        <p style="font-size:12px; color:var(--muted)">Introduce el <code>ADMIN_TOKEN</code> del servidor.</p>
         <input id="adminTokenInput" type="password" placeholder="Token admin">
         <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
             <button class="secondary" onclick="closeAdminModal()">Cancelar</button>
@@ -151,23 +110,20 @@
                 <div>Ransomware: <strong id="statRansom">0</strong></div>
                 <div style="color:var(--muted)">No aplicables: <strong id="statNA">0</strong></div>
             </div>
-            <div class="controls">
-                <button onclick="fetchStats()" style="width:100%">Actualizar</button>
-            </div>
+            <button onclick="fetchStats()" style="margin-top:12px">Actualizar</button>
         </div>
       </aside>
 
       <main class="main">
         <div class="card">
             <h2 style="margin-top:0">📁 Analizar Archivo</h2>
-            <label for="fileInput">Seleccionar ejecutable (.exe)</label>
+            <label>Seleccionar ejecutable (.exe)</label>
             <input type="file" id="fileInput" accept=".exe" />
             <div class="controls">
                 <button id="uploadBtn" onclick="uploadFile()">Ejecutar Análisis IA</button>
                 <button class="secondary" onclick="clearResult()">Limpiar</button>
                 <button class="secondary" id="downloadResultBtn" data-admin="true" style="display:none" onclick="downloadResult()">Descargar JSON</button>
             </div>
-
             <div id="visualResult" class="visual-result" style="display:none">
                 <div class="emoji" id="visualEmoji">🎯</div>
                 <div>
@@ -179,10 +135,10 @@
 
         <div class="card">
             <h2 style="margin-top:0">✍️ Entrada Manual</h2>
-            <div id="manualFields" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px;"></div>
+            <div id="manualFields" style="max-height: 250px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px;"></div>
             <div class="controls">
                 <button id="manualBtn" onclick="predictManual()">Clasificar Manualmente</button>
-                <button class="secondary" onclick="clearManual()">Limpiar Campos</button>
+                <button class="secondary" onclick="clearManual()">Limpiar</button>
             </div>
         </div>
 
@@ -195,24 +151,21 @@
       <aside class="sidebar-right">
         <div class="card">
             <h2 style="margin-top:0">📝 Comentarios</h2>
-            <textarea id="commentInput" rows="4" placeholder="Observaciones sobre el modelo..."></textarea>
+            <textarea id="commentInput" rows="4" placeholder="Observaciones..."></textarea>
             <button id="saveCommentBtn" onclick="saveComment()" style="margin-top:10px">Enviar</button>
-            
             <div data-admin="true" style="display:none; margin-top:10px; border-top:1px solid #eee; padding-top:10px">
-                <button class="secondary" onclick="exportComments()" style="font-size:11px; margin-bottom:5px">Exportar JSON</button>
-                <button class="secondary" onclick="exportCommentsCSV()" style="font-size:11px; margin-bottom:5px">Exportar CSV</button>
+                <button class="secondary" onclick="exportComments()" style="font-size:11px">Exportar JSON</button>
                 <button class="secondary" onclick="adminClearComments()" style="font-size:11px; color:red">Borrar todo</button>
             </div>
-
-            <h3 style="font-size:14px; margin-top:15px">Historial Reciente</h3>
+            <h3 style="font-size:14px; margin-top:15px">Historial</h3>
             <ul id="commentsList" style="font-size:12px; padding-left:15px; max-height: 200px; overflow-y: auto;"></ul>
         </div>
       </aside>
     </div>
 
     <script>
-        const DEFAULT_API = window.location.origin;
-        let API_URL = localStorage.getItem('api_url') || DEFAULT_API;
+        // Lógica simplificada: Usamos la URL actual por defecto
+        let API_URL = localStorage.getItem('api_url') || window.location.origin;
 
         const fields = [
             "Machine", "DebugSize", "DebugRVA", "MajorImageVersion", "MajorOSVersion",
@@ -221,88 +174,64 @@
             "BitcoinAddresses"
         ];
 
-        let lastResult = null;
-
-        // --- Inicialización ---
-        window.onload = async () => {
-            document.getElementById('apiInput').value = API_URL === DEFAULT_API ? '' : API_URL;
+        window.onload = () => {
+            document.getElementById('apiInput').value = (API_URL === window.location.origin) ? '' : API_URL;
             renderManualFields();
             updateAdminUI();
             
-            // Marcar visita
-            fetch(`${API_URL}/visit`, { method: 'POST' }).catch(() => {});
-            
-            await checkApiHealth(false);
+            // Intentar cargar datos iniciales sin bloquear nada
+            fetch(`${API_URL}/visit`, { method: 'POST' }).catch(()=>{});
             fetchStats();
             renderComments();
         };
 
         function renderManualFields() {
             let html = "";
-            fields.forEach(f => {
-                html += `<label>${f}</label><input type="number" id="${f}" value="0">`;
-            });
+            fields.forEach(f => { html += `<label>${f}</label><input type="number" id="${f}" value="0">`; });
             document.getElementById("manualFields").innerHTML = html;
         }
 
-        // --- Lógica de API ---
         function saveApiUrl() {
             const v = document.getElementById('apiInput').value.trim();
-            API_URL = v === '' ? DEFAULT_API : v;
+            API_URL = v === '' ? window.location.origin : v;
             localStorage.setItem('api_url', API_URL);
-            checkApiHealth(true);
+            location.reload(); // Recargar para aplicar cambios
         }
 
-        async function checkApiHealth(showAlert = true) {
-            const badge = document.getElementById('apiBadge');
-            badge.className = 'badge';
-            badge.textContent = 'Verificando...';
-            try {
-                const res = await fetch(`${API_URL}/api`);
-                if (res.ok) {
-                    badge.textContent = 'En línea';
-                    badge.classList.add('online');
-                    return true;
-                }
-            } catch (e) {}
-            badge.textContent = 'Desconectado';
-            badge.classList.add('offline');
-            if (showAlert) alert("No se pudo conectar con la API en " + API_URL);
-            return false;
-        }
-
-        // --- Análisis ---
         async function uploadFile() {
-    const fileInput = document.getElementById('fileInput');
-    if (!fileInput.files[0]) return alert("Selecciona un archivo .exe");
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files[0]) return alert("Selecciona un archivo .exe");
 
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
+            const btn = document.getElementById('uploadBtn');
+            setLoading(btn, true);
 
-    // Asegúrate de que API_URL no termine en / para evitar //predict
-    const base = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
-    const url = `${base}/predict`; 
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
 
-    try {
-        const res = await fetch(url, {
-            method: 'POST',
-            body: formData
-        });
+            // Limpiar la URL para evitar el error de JSON/HTML
+            const base = API_URL.replace(/\/$/, "");
+            
+            try {
+                const res = await fetch(`${base}/predict`, {
+                    method: 'POST',
+                    body: formData
+                });
 
-        // Si el servidor devuelve un error (404, 500), no intentes parsear JSON directamente
-        if (!res.ok) {
-            const errorText = await res.text();
-            console.error("Error del servidor:", errorText);
-            throw new Error(`Error en el servidor: ${res.status}`);
+                if (!res.ok) throw new Error("El servidor devolvió un error (Posiblemente model.pkl no encontrado)");
+
+                const data = await res.json();
+                updateResult(JSON.stringify(data, null, 2));
+                setVisualResult(data.prediction);
+                fetchStats();
+            } catch (err) {
+                console.error(err);
+                updateResult("Error: " + err.message, true);
+                alert("Error al procesar. Verifica que el servidor de Render esté encendido.");
+            } finally {
+                setLoading(btn, false);
+            }
         }
 
-        const data = await res.json();
-        // ... resto de tu lógica para mostrar resultados
-    } catch (err) {
-        console.error(err);
-        document.getElementById('result').textContent = "Error: " + err.message;
-    }
-}
         async function predictManual() {
             const btn = document.getElementById('manualBtn');
             const payload = {};
@@ -310,13 +239,12 @@
 
             setLoading(btn, true);
             try {
-                const res = await fetch(`${API_URL}/predict_manual`, {
+                const res = await fetch(`${API_URL.replace(/\/$/, "")}/predict_manual`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-                lastResult = data;
                 updateResult(JSON.stringify(data, null, 2));
                 setVisualResult(data.prediction);
                 fetchStats();
@@ -327,15 +255,11 @@
             }
         }
 
-        // --- UI Helpers ---
+        // --- UI HELPERS ---
         function setLoading(btn, isLoading) {
-            if (isLoading) {
-                btn.disabled = true;
-                btn.innerHTML = `<span class="spinner"></span> Procesando...`;
-            } else {
-                btn.disabled = false;
-                btn.textContent = btn.id === 'uploadBtn' ? 'Ejecutar Análisis IA' : 'Clasificar Manualmente';
-            }
+            btn.disabled = isLoading;
+            if (isLoading) btn.innerHTML = `<span class="spinner"></span> Procesando...`;
+            else btn.textContent = btn.id === 'uploadBtn' ? 'Ejecutar Análisis IA' : 'Clasificar Manualmente';
         }
 
         function updateResult(text, isError = false) {
@@ -352,122 +276,65 @@
             box.className = `visual-result ${isRansom ? 'ransomware' : 'benign'}`;
             document.getElementById('visualEmoji').textContent = isRansom ? '⚠️' : '✅';
             document.getElementById('visualMsg').textContent = isRansom ? 'AMENAZA DETECTADA' : 'ARCHIVO SEGURO';
-            document.getElementById('visualSub').textContent = isRansom ? 'El modelo identifica patrones de secuestro de datos.' : 'No se detectaron anomalías maliciosas.';
         }
 
-        function clearResult() {
-            updateResult("Esperando análisis...");
-            setVisualResult(null);
-            lastResult = null;
-        }
-
+        function clearResult() { updateResult("Esperando análisis..."); setVisualResult(null); }
         function clearManual() { fields.forEach(f => document.getElementById(f).value = 0); }
 
-        // --- Estadísticas y Comentarios ---
         async function fetchStats() {
             try {
-                const res = await fetch(`${API_URL}/stats`);
+                const res = await fetch(`${API_URL.replace(/\/$/, "")}/stats`);
                 const s = await res.json();
-                document.getElementById('statVisits').textContent = s.visits;
-                document.getElementById('statFiles').textContent = s.files_tested;
-                document.getElementById('statBenign').textContent = s.benign;
-                document.getElementById('statRansom').textContent = s.ransomware;
-                document.getElementById('statNA').textContent = s.not_applicable;
+                document.getElementById('statVisits').textContent = s.visits || 0;
+                document.getElementById('statFiles').textContent = s.files_tested || 0;
+                document.getElementById('statBenign').textContent = s.benign || 0;
+                document.getElementById('statRansom').textContent = s.ransomware || 0;
+                document.getElementById('statNA').textContent = s.not_applicable || 0;
             } catch (e) {}
         }
 
         async function saveComment() {
             const text = document.getElementById('commentInput').value.trim();
             if (!text) return;
-            const btn = document.getElementById('saveCommentBtn');
-            btn.disabled = true;
             try {
-                await fetch(`${API_URL}/comment`, {
+                await fetch(`${API_URL.replace(/\/$/, "")}/comment`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ text })
                 });
                 document.getElementById('commentInput').value = '';
                 renderComments();
-            } finally { btn.disabled = false; }
+            } catch(e) {}
         }
 
         async function renderComments() {
             try {
-                const res = await fetch(`${API_URL}/comments`);
+                const res = await fetch(`${API_URL.replace(/\/$/, "")}/comments`);
                 const list = await res.json();
-                const ul = document.getElementById('commentsList');
-                ul.innerHTML = list.slice(-10).reverse().map(c => 
+                document.getElementById('commentsList').innerHTML = list.slice(-10).reverse().map(c => 
                     `<li><strong>${new Date(c.ts).toLocaleDateString()}</strong>: ${c.text}</li>`
                 ).join('');
             } catch (e) {}
         }
 
-        // --- Administración ---
+        // Admin Logic
         function isAdmin() { return localStorage.getItem('admin_token') !== null; }
-        function getAdminToken() { return localStorage.getItem('admin_token'); }
-
         function updateAdminUI() {
-            const adminEls = document.querySelectorAll('[data-admin="true"]');
-            adminEls.forEach(el => el.style.display = isAdmin() ? 'block' : 'none');
+            document.querySelectorAll('[data-admin="true"]').forEach(el => el.style.display = isAdmin() ? 'block' : 'none');
             const btn = document.getElementById('openAdminBtn');
-            if (isAdmin()) {
-                btn.textContent = 'Logout';
-                btn.onclick = adminLogout;
-            } else {
-                btn.textContent = 'Admin';
-                btn.onclick = openAdminModal;
-            }
+            btn.textContent = isAdmin() ? 'Logout' : 'Admin';
+            btn.onclick = isAdmin() ? adminLogout : openAdminModal;
         }
-
+        function openAdminModal(){ document.getElementById('adminModal').style.display='block'; document.getElementById('adminBackdrop').style.display='block'; }
+        function closeAdminModal(){ document.getElementById('adminModal').style.display='none'; document.getElementById('adminBackdrop').style.display='none'; }
+        function adminLogout() { localStorage.removeItem('admin_token'); updateAdminUI(); }
         async function adminLogin() {
             const token = document.getElementById('adminTokenInput').value;
             try {
-                const res = await fetch(`${API_URL}/admin/auth`, { headers: { 'X-Admin-Token': token } });
-                if (res.ok) {
-                    localStorage.setItem('admin_token', token);
-                    closeAdminModal();
-                    updateAdminUI();
-                    alert("Acceso administrador activado.");
-                } else throw new Error();
-            } catch (e) { alert("Token inválido."); }
-        }
-
-        function adminLogout() {
-            localStorage.removeItem('admin_token');
-            updateAdminUI();
-            alert("Sesión cerrada.");
-        }
-
-        function openAdminModal(){ document.getElementById('adminModal').style.display='block'; document.getElementById('adminBackdrop').style.display='block'; }
-        function closeAdminModal(){ document.getElementById('adminModal').style.display='none'; document.getElementById('adminBackdrop').style.display='none'; }
-
-        // --- Funciones Admin Export ---
-        async function exportComments() {
-            const res = await fetch(`${API_URL}/admin/comments/export`, { headers: { 'X-Admin-Token': getAdminToken() } });
-            const data = await res.json();
-            downloadFile(JSON.stringify(data, null, 2), 'comments.json');
-        }
-
-        async function exportCommentsCSV() {
-            const res = await fetch(`${API_URL}/admin/comments/export_csv`, { headers: { 'X-Admin-Token': getAdminToken() } });
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'comments.csv'; a.click();
-        }
-
-        async function adminClearComments() {
-            if (!confirm("¿Borrar todos los comentarios permanentemente?")) return;
-            await fetch(`${API_URL}/admin/comments/clear`, { method: 'POST', headers: { 'X-Admin-Token': getAdminToken() } });
-            renderComments();
-        }
-
-        function downloadResult() { if (lastResult) downloadFile(JSON.stringify(lastResult, null, 2), 'analisis.json'); }
-
-        function downloadFile(content, fileName) {
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
+                const res = await fetch(`${API_URL.replace(/\/$/, "")}/admin/auth`, { headers: { 'X-Admin-Token': token } });
+                if (res.ok) { localStorage.setItem('admin_token', token); closeAdminModal(); updateAdminUI(); }
+                else alert("Token inválido");
+            } catch (e) { alert("Error de conexión"); }
         }
     </script>
 </body>
