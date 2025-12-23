@@ -1,6 +1,6 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Header
+from fastapi import FastAPI, UploadFile, File, HTTPException, Header
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
@@ -11,17 +11,42 @@ import sqlite3
 import smtplib
 import logging
 from email.message import EmailMessage
-from typing import Optional, List
+from typing import Optional
 from pathlib import Path
+from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, DateTime, func
+from sqlalchemy.orm import declarative_base, sessionmaker
 
+# Importar extractor local
 from metadata_extractor import extract_metadata
 
-# Configuración de Logging
-logging.basicConfig(level=logging.INFO)
+# ---------------------------
+# Configuración y Modelos Pydantic (Definidos al inicio)
+# ---------------------------
+
+class ManualInput(BaseModel):
+    Machine: int
+    DebugSize: int
+    DebugRVA: int
+    MajorImageVersion: int
+    MajorOSVersion: int
+    ExportRVA: int
+    ExportSize: int
+    IatVRA: int
+    MajorLinkerVersion: int
+    MinorLinkerVersion: int
+    NumberOfSections: int
+    SizeOfStackReserve: int
+    DllCharacteristics: int
+    ResourceSize: int
+    BitcoinAddresses: int
+
+class CommentIn(BaseModel):
+    text: str
 
 # ---------------------------
 # Inicializar FastAPI
 # ---------------------------
+
 app = FastAPI()
 
 app.add_middleware(
@@ -33,54 +58,12 @@ app.add_middleware(
 )
 
 # ---------------------------
-# Modelo y Predicción (Lazy Load)
-# ---------------------------
-model = None
-
-def load_model():
-    global model
-    if model is not None:
-        return
-    try:
-        # Intento de carga optimizada
-        model = joblib.load("model.pkl")
-        logging.info('Modelo cargado exitosamente.')
-    except Exception as e:
-        logging.error(f'Error cargando el modelo: {e}')
-        raise
-
-def get_model():
-    if model is None:
-        load_model()
-    return model
-
-FEATURE_COLUMNS = [
-    "Machine", "DebugSize", "DebugRVA", "MajorImageVersion", 
-    "MajorOSVersion", "ExportRVA", "ExportSize", "IatVRA", 
-    "MajorLinkerVersion", "MinorLinkerVersion", "NumberOfSections", 
-    "SizeOfStackReserve", "DllCharacteristics", "ResourceSize", "BitcoinAddresses"
-]
-
-class ManualInput(BaseModel):
-    Machine: int; DebugSize: int; DebugRVA: int; MajorImageVersion: int
-    MajorOSVersion: int; ExportRVA: int; ExportSize: int; IatVRA: int
-    MajorLinkerVersion: int; MinorLinkerVersion: int; NumberOfSections: int
-    SizeOfStackReserve: int; DllCharacteristics: int; ResourceSize: int
-    BitcoinAddresses: int
-
-# ---------------------------
-# Base de Datos (SQLAlchemy)
+# Configuración de Base de Datos
 # ---------------------------
 DB_PATH = os.getenv('STATS_DB', 'stats.db')
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, DateTime, func
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
-
 if DATABASE_URL:
-    # Ajuste para compatibilidad con Heroku/Render postgres:// -> postgresql://
-    if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
     engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 else:
     engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
@@ -101,125 +84,150 @@ class Comment(Base):
     ts = Column(DateTime(timezone=True), server_default=func.now())
     email_sent = Column(Boolean, default=False)
 
-# Dependencia para obtener la DB en los endpoints (Mejor práctica)
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 def init_db():
     Base.metadata.create_all(bind=engine)
 
 # ---------------------------
-# Utilidades de Correo y Admin
+# Carga del Modelo ML
 # ---------------------------
+model = None
+
+def get_model():
+    global model
+    if model is None:
+        try:
+            model = joblib.load("model.pkl")
+            logging.info('Modelo cargado correctamente.')
+        except Exception as e:
+            logging.error(f'Error al cargar model.pkl: {e}')
+            raise HTTPException(status_code=500, detail="Modelo no disponible.")
+    return model
+
+FEATURE_COLUMNS = [
+    "Machine", "DebugSize", "DebugRVA", "MajorImageVersion", "MajorOSVersion",
+    "ExportRVA", "ExportSize", "IatVRA", "MajorLinkerVersion", "MinorLinkerVersion",
+    "NumberOfSections", "SizeOfStackReserve", "DllCharacteristics", "ResourceSize",
+    "BitcoinAddresses"
+]
+
+# ---------------------------
+# Helpers (DB y Email)
+# ---------------------------
+def insert_event(event_type: str):
+    with SessionLocal() as db:
+        ev = Event(event_type=event_type)
+        db.add(ev)
+        db.commit()
+
+def add_comment_to_db(text: str, email_sent: bool = False):
+    with SessionLocal() as db:
+        c = Comment(text=text, email_sent=email_sent)
+        db.add(c)
+        db.commit()
+        db.refresh(c)
+        return c.id
+
+def get_stats_from_db():
+    with SessionLocal() as db:
+        return {
+            'visits': db.query(Event).filter(Event.event_type == 'visit').count(),
+            'files_tested': db.query(Event).filter(Event.event_type.like('test_%')).count(),
+            'benign': db.query(Event).filter(Event.event_type == 'test_benign').count(),
+            'ransomware': db.query(Event).filter(Event.event_type == 'test_ransomware').count(),
+            'not_applicable': db.query(Event).filter(Event.event_type == 'test_not_applicable').count()
+        }
+
+# Variables de entorno para Email y Admin
 ADMIN_TOKEN = os.getenv('ADMIN_TOKEN')
 
 def _check_admin_token(token: str) -> bool:
-    if not ADMIN_TOKEN: return False
-    return token == ADMIN_TOKEN
-
-def send_comment_email(text: str) -> bool:
-    host = os.getenv('SMTP_HOST')
-    port = int(os.getenv('SMTP_PORT', '0'))
-    if not host or not port: return False
-    try:
-        msg = EmailMessage()
-        msg['Subject'] = 'Nuevo comentario - Ransomware AI'
-        msg['From'] = os.getenv('SMTP_USER', 'noreply@ai.com')
-        msg['To'] = os.getenv('DEST_EMAIL')
-        msg.set_content(text)
-        with smtplib.SMTP(host, port) as server:
-            if port == 587: server.starttls()
-            server.login(os.getenv('SMTP_USER'), os.getenv('SMTP_PASS'))
-            server.send_message(msg)
-        return True
-    except: return False
+    return ADMIN_TOKEN and token == ADMIN_TOKEN
 
 @app.on_event("startup")
 def on_startup():
     init_db()
 
 # ---------------------------
-# ENDPOINTS API (CORREGIDOS)
+# ENDPOINTS API
 # ---------------------------
 
 @app.get("/api")
 def root():
-    return {"status": "online", "message": "API funcionando"}
+    return {"message": "API funcionando correctamente"}
 
 @app.post("/predict")
-async def predict(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    tmp_path = None
+async def predict(file: UploadFile = File(...)):
     try:
-        # Guardar archivo temporal
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
-            content = await file.read()
-            tmp.write(content)
+            tmp.write(await file.read())
             tmp_path = tmp.name
 
-        # Extraer metadatos
         data = extract_metadata(tmp_path)
-        
+        os.remove(tmp_path) # Limpieza
+
         if data is None:
-            db.add(Event(event_type='test_not_applicable'))
-            db.commit()
-            return {"error": "El archivo no es un ejecutable PE válido."}
+            insert_event('test_not_applicable')
+            return {"error": "No se pudieron extraer metadatos."}
 
-        # Predicción
         df = pd.DataFrame([data], columns=FEATURE_COLUMNS)
-        m = get_model()
-        pred = m.predict(df)[0]
+        pred = get_model().predict(df)[0]
         label = "benign" if pred == 1 else "ransomware"
-
-        # Registrar evento
-        db.add(Event(event_type=f'test_{label}'))
-        db.commit()
+        insert_event(f'test_{label}')
 
         return {"prediction": label, "features": data}
-
     except Exception as e:
-        db.add(Event(event_type='test_error'))
-        db.commit()
+        insert_event('test_error')
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        # --- CORRECCIÓN CRÍTICA: Borrar siempre el archivo temporal ---
-        if tmp_path and os.path.exists(tmp_path):
-            os.remove(tmp_path)
+
+@app.post("/predict_manual")
+def predict_manual(data: ManualInput):
+    try:
+        df = pd.DataFrame([data.dict()], columns=FEATURE_COLUMNS)
+        pred = get_model().predict(df)[0]
+        label = "benign" if pred == 1 else "ransomware"
+        insert_event(f'test_{label}')
+        return {"prediction": label, "features": data.dict()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post('/comment')
-def post_comment(payload: CommentIn, db: Session = Depends(get_db)):
+def post_comment(payload: CommentIn):
     text = payload.text.strip()
-    if not text: raise HTTPException(status_code=400, detail='Comentario vacío')
+    if not text:
+        raise HTTPException(status_code=400, detail='Comentario vacío')
     
-    sent = send_comment_email(text)
-    new_comment = Comment(text=text, email_sent=sent)
-    db.add(new_comment)
-    db.commit()
-    return {"ok": True}
+    # Aquí puedes integrar send_comment_email si está configurado
+    cid = add_comment_to_db(text, email_sent=False)
+    return {'id': cid, 'text': text}
+
+@app.get('/comments')
+def get_comments(limit: int = 50):
+    with SessionLocal() as db:
+        rows = db.query(Comment).order_by(Comment.id.desc()).limit(limit).all()
+        return [{'id': r.id, 'text': r.text, 'ts': r.ts.isoformat()} for r in rows]
+
+@app.post('/visit')
+def visit():
+    insert_event('visit')
+    return {'ok': True}
 
 @app.get('/stats')
-def get_stats(db: Session = Depends(get_db)):
-    return {
-        'visits': db.query(Event).filter(Event.event_type == 'visit').count(),
-        'files_tested': db.query(Event).filter(Event.event_type.like('test_%')).count(),
-        'ransomware': db.query(Event).filter(Event.event_type == 'test_ransomware').count(),
-        'benign': db.query(Event).filter(Event.event_type == 'test_benign').count()
-    }
+def stats():
+    return get_stats_from_db()
 
-# ---------------------------
-# SERVIR FRONTEND (CORREGIDO)
-# ---------------------------
+# --- Admin Endpoints ---
+@app.get('/admin/auth')
+def admin_auth(x_admin_token: Optional[str] = Header(None)):
+    if not _check_admin_token(x_admin_token):
+        raise HTTPException(status_code=403, detail='Token inválido')
+    return {'ok': True}
 
-# Importante: Estas rutas van al final para no interferir con los endpoints
+# Servir Frontend
 @app.get("/")
-def read_index():
-    # Busca el index.html dentro de la carpeta static
-    index_path = os.path.join("static", "index.html")
-    if os.path.exists(index_path):
+def frontend():
+    index_path = Path("static/index.html")
+    if index_path.exists():
         return FileResponse(index_path)
-    return JSONResponse({"error": "index.html no encontrado en carpeta /static"}, status_code=404)
+    return {"error": "index.html no encontrado en carpeta static"}
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
