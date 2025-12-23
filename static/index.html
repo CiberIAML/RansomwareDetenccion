@@ -273,33 +273,36 @@
 
         // --- Análisis ---
         async function uploadFile() {
-            const fileInput = document.getElementById("fileInput");
-            const btn = document.getElementById('uploadBtn');
-            if (!fileInput.files.length) return alert("Selecciona un archivo");
+    const fileInput = document.getElementById('fileInput');
+    if (!fileInput.files[0]) return alert("Selecciona un archivo .exe");
 
-            const file = fileInput.files[0];
-            setLoading(btn, true);
-            updateResult("Analizando binario...");
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
 
-            try {
-                const formData = new FormData();
-                formData.append("file", file);
-                const res = await fetch(`${API_URL}/predict`, { method: "POST", body: formData });
-                const data = await res.json();
-                
-                if (!res.ok) throw new Error(data.detail || "Error en el servidor");
+    // Asegúrate de que API_URL no termine en / para evitar //predict
+    const base = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+    const url = `${base}/predict`; 
 
-                lastResult = data;
-                updateResult(JSON.stringify(data, null, 2));
-                setVisualResult(data.prediction);
-                fetchStats();
-            } catch (err) {
-                updateResult("Error: " + err.message, true);
-            } finally {
-                setLoading(btn, false);
-            }
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            body: formData
+        });
+
+        // Si el servidor devuelve un error (404, 500), no intentes parsear JSON directamente
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error("Error del servidor:", errorText);
+            throw new Error(`Error en el servidor: ${res.status}`);
         }
 
+        const data = await res.json();
+        // ... resto de tu lógica para mostrar resultados
+    } catch (err) {
+        console.error(err);
+        document.getElementById('result').textContent = "Error: " + err.message;
+    }
+}
         async function predictManual() {
             const btn = document.getElementById('manualBtn');
             const payload = {};
