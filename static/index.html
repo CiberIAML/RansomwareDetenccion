@@ -5,70 +5,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Clasificador Ransomware</title>
+    
     <style>
+        /* Definición de variables de colores (Temas) */
         :root{--bg:#f4f8ff;--text:#0f1724;--muted:#64748b;--primary:#1e6fff;--card:#ffffff}
+        
+        /* Estilos globales del cuerpo de la página */
         html,body{height:100%}
         body {
             font-family: Inter, Arial, sans-serif;
-            max-width: none;
-            width: 100%;
-            margin: 0;
-            padding: 24px 36px;
-            box-sizing: border-box;
+            margin: 0; padding: 24px 36px;
             color:var(--text);
             background: linear-gradient(180deg, #f7fbff 0%, #f4f8ff 100%);
         }
 
-        header{display:flex;flex-direction:row;align-items:center;gap:6px;margin-bottom:20px;text-align:left;background:linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.8));padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(30,79,255,0.06)}
+        /* Diseño del encabezado con sombra y gradiente */
+        header{display:flex;flex-direction:row;align-items:center;gap:6px;margin-bottom:20px;background:linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.8));padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(30,79,255,0.06)}
         header h1{font-size:22px;margin:0;color:var(--primary)}
-        header p{margin:0;color:var(--muted);font-size:13px} 
-
+        
+        /* Contenedor principal dividido en 3 columnas (Sidebar Izquierda, Centro, Sidebar Derecha) */
         .container { display: flex; gap: 18px; align-items: flex-start; }
         .sidebar-left, .sidebar-right { width: 26%; min-width: 220px; }
         .main { width: 48%; min-width: 420px; }
 
+        /* Estilo para las tarjetas blancas que contienen los módulos */
         .card {
-            padding: 16px;
-            border: 1px solid #e6e9ef;
-            border-radius: 10px;
-            margin-bottom: 14px;
-            box-sizing: border-box;
-            background: #fff;
+            padding: 16px; border: 1px solid #e6e9ef; border-radius: 10px;
+            margin-bottom: 14px; background: #fff;
             box-shadow: 0 1px 4px rgba(20,33,61,0.04);
         }
 
-        label{display:block;font-weight:600;margin-top:10px;font-size:13px}
-        input, button, select, textarea {
+        /* Estilos para formularios: botones, inputs y selectores */
+        input, button, textarea {
             padding: 10px; width: 100%; margin-top: 8px; box-sizing: border-box;
-            font-size: 14px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff;
+            font-size: 14px; border: 1px solid #d1d5db; border-radius: 8px;
         }
 
         button {
-            background: var(--primary); border: none; color: white; cursor: pointer;
-            border-radius: 8px; padding: 10px 12px; font-weight:600; transition: background 0.2s;
+            background: var(--primary); color: white; cursor: pointer;
+            font-weight:600; border: none; transition: 0.2s;
         }
         button:hover { background: #165ed9; }
-        button.secondary{background:#f3f4f6;color:#111;border:1px solid #e5e7eb}
-        button:disabled{opacity:0.6;cursor:not-allowed}
+        button.secondary{background:#f3f4f6; color:#111; border:1px solid #e5e7eb}
 
+        /* Consola de detalles (fondo oscuro estilo código) */
         pre {
             background: #0f1724; color: #e6eef8; padding: 14px; border-radius:8px;
-            font-size:13px; max-height:320px; overflow:auto; white-space: pre-wrap; word-break: break-all;
+            font-size:13px; max-height:320px; overflow:auto; white-space: pre-wrap;
         }
 
-        .controls{display:flex;gap:8px;margin-top:12px}
-        .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-radius:50%;border-top-color:#fff;animation:spin .8s linear infinite;margin-right:8px}
+        /* Animación de carga (spinner) cuando la IA está analizando */
+        .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-radius:50%;border-top-color:#fff;animation:spin .8s linear infinite;}
         @keyframes spin{to{transform:rotate(360deg)}}
 
-        .visual-result{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(14,30,80,0.04);box-shadow:0 4px 12px rgba(14,30,80,0.03)}
-        .visual-result .emoji{font-size:34px}
+        /* Estilos visuales para los resultados: Verde (Benigno) o Naranja (Ransomware) */
+        .visual-result{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px;border-radius:10px;background:#fff;}
         .visual-result.benign{border-left:4px solid #16a34a;}
         .visual-result.ransomware{border-left:4px solid #f97316;}
 
-        .badge{display:inline-block;padding:4px 10px;background:#eef2ff;color:var(--primary);border-radius:999px;font-weight:600;font-size:11px}
-        .badge.online{background:#ecfdf5;color:#065f46}
-        .badge.offline{background:#fff1f2;color:#991b1b}
-
+        /* Responsividad: si la pantalla es pequeña, las columnas se apilan una debajo de otra */
         @media (max-width: 900px) { .container{flex-direction:column} .sidebar-left,.sidebar-right,.main{width:100%} }
     </style>
 </head>
@@ -77,20 +72,20 @@
     <header>
         <div>
             <h1>🔐 Clasificador de Ransomware IA</h1>
-            <p>Sube un EXE o completa los campos manuales para la detección por Machine Learning.</p>
+            <p>Sube un EXE o completa los campos manuales.</p>
         </div>
         <div style="margin-left:auto;text-align:right">
             <div class="small" style="font-size: 11px; color: var(--muted)">Estado API:<br><span id="apiBadge" class="badge">Listo</span></div>
-            <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-                <input type="text" id="apiInput" placeholder="URL de la API" style="width:180px; margin:0; padding:6px">
-                <button id="saveApiBtn" class="secondary" onclick="saveApiUrl()" style="padding:6px 10px; width:auto">OK</button>
-                <button id="openAdminBtn" class="secondary" onclick="openAdminModal()" style="padding:6px 10px; width:auto">Admin</button>
+            <div style="margin-top:8px;display:flex;gap:8px">
+                <input type="text" id="apiInput" placeholder="URL de la API" style="width:180px; padding:6px">
+                <button id="saveApiBtn" class="secondary" onclick="saveApiUrl()" style="width:auto">OK</button>
+                <button id="openAdminBtn" class="secondary" onclick="openAdminModal()" style="width:auto">Admin</button>
             </div> 
         </div> 
     </header>
 
-    <div id="adminModal" style="display:none;position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#fff;padding:20px;border-radius:8px;box-shadow:0 10px 30px rgba(10,20,60,0.15);z-index:1000;min-width:320px">
-        <h3 style="margin:0 0 8px">Acceso administrador</h3>
+    <div id="adminModal" style="display:none;position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#fff;padding:20px;border-radius:8px;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,0.1)">
+        <h3>Acceso administrador</h3>
         <input id="adminTokenInput" type="password" placeholder="Token admin">
         <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
             <button class="secondary" onclick="closeAdminModal()">Cancelar</button>
@@ -102,172 +97,118 @@
     <div class="container">
       <aside class="sidebar-left">
         <div class="card">
-            <h2 style="font-size:18px; margin-top:0">📊 Estadísticas</h2>
-            <div id="dashboardStats" style="font-size:13px; line-height: 1.6">
+            <h2>📊 Estadísticas</h2>
+            <div id="dashboardStats">
                 <div>Visitas: <strong id="statVisits">0</strong></div>
-                <div>Archivos probados: <strong id="statFiles">0</strong></div>
+                <div>Archivos: <strong id="statFiles">0</strong></div>
                 <div>Benignos: <strong id="statBenign">0</strong></div>
                 <div>Ransomware: <strong id="statRansom">0</strong></div>
-                <div style="color:var(--muted)">No aplicables: <strong id="statNA">0</strong></div>
             </div>
-            <button onclick="fetchStats()" style="margin-top:12px">Actualizar</button>
+            <button onclick="fetchStats()">Actualizar</button>
         </div>
       </aside>
 
       <main class="main">
         <div class="card">
-            <h2 style="margin-top:0">📁 Analizar Archivo</h2>
+            <h2>📁 Analizar Archivo</h2>
             <label>Seleccionar ejecutable (.exe)</label>
             <input type="file" id="fileInput" accept=".exe" />
             <div class="controls">
                 <button id="uploadBtn" onclick="uploadFile()">Ejecutar Análisis IA</button>
                 <button class="secondary" onclick="clearResult()">Limpiar</button>
-                <button class="secondary" id="downloadResultBtn" data-admin="true" style="display:none" onclick="downloadResult()">Descargar JSON</button>
             </div>
             <div id="visualResult" class="visual-result" style="display:none">
                 <div class="emoji" id="visualEmoji">🎯</div>
                 <div>
-                    <div class="msg" id="visualMsg">Resultado</div>
-                    <div class="sub" style="font-size:12px; color:var(--muted)" id="visualSub">---</div>
+                    <div id="visualMsg">Resultado</div>
+                    <div id="visualSub" style="font-size:12px; color:var(--muted)">---</div>
                 </div>
             </div> 
         </div>
 
         <div class="card">
-            <h2 style="margin-top:0">✍️ Entrada Manual</h2>
-            <div id="manualFields" style="max-height: 250px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px;"></div>
-            <div class="controls">
-                <button id="manualBtn" onclick="predictManual()">Clasificar Manualmente</button>
-                <button class="secondary" onclick="clearManual()">Limpiar</button>
-            </div>
+            <h2>✍️ Entrada Manual</h2>
+            <div id="manualFields" style="max-height: 250px; overflow-y: auto;"></div>
+            <button id="manualBtn" onclick="predictManual()">Clasificar Manualmente</button>
         </div>
 
         <div class="card">
-            <h2 style="margin-top:0">🔍 Detalles del Modelo</h2>
+            <h2>🔍 Detalles del Modelo</h2>
             <pre id="result">Esperando análisis...</pre>
         </div>
       </main>
 
       <aside class="sidebar-right">
         <div class="card">
-            <h2 style="margin-top:0">📝 Comentarios</h2>
-            <textarea id="commentInput" rows="4" placeholder="Observaciones..."></textarea>
-            <button id="saveCommentBtn" onclick="saveComment()" style="margin-top:10px">Enviar</button>
-            <div data-admin="true" style="display:none; margin-top:10px; border-top:1px solid #eee; padding-top:10px">
-                <button class="secondary" onclick="exportComments()" style="font-size:11px">Exportar JSON</button>
-                <button class="secondary" onclick="adminClearComments()" style="font-size:11px; color:red">Borrar todo</button>
-            </div>
-            <h3 style="font-size:14px; margin-top:15px">Historial</h3>
-            <ul id="commentsList" style="font-size:12px; padding-left:15px; max-height: 200px; overflow-y: auto;"></ul>
+            <h2>📝 Comentarios</h2>
+            <textarea id="commentInput" rows="4" placeholder="Escribe aquí..."></textarea>
+            <button onclick="saveComment()">Enviar</button>
+            <h3>Historial</h3>
+            <ul id="commentsList" style="list-style:none; padding:0"></ul>
         </div>
       </aside>
     </div>
 
+    
+
     <script>
-        // Lógica simplificada: Usamos la URL actual por defecto
+        // URL base para las peticiones. Se guarda en el navegador (localStorage)
         let API_URL = localStorage.getItem('api_url') || window.location.origin;
 
-        const fields = [
-            "Machine", "DebugSize", "DebugRVA", "MajorImageVersion", "MajorOSVersion",
-            "ExportRVA", "ExportSize", "IatVRA", "MajorLinkerVersion", "MinorLinkerVersion",
-            "NumberOfSections", "SizeOfStackReserve", "DllCharacteristics", "ResourceSize",
-            "BitcoinAddresses"
-        ];
+        // Lista de columnas técnicas que espera el modelo de IA
+        const fields = ["Machine", "DebugSize", "DebugRVA", "MajorImageVersion", "MajorOSVersion", "ExportRVA", "ExportSize", "IatVRA", "MajorLinkerVersion", "MinorLinkerVersion", "NumberOfSections", "SizeOfStackReserve", "DllCharacteristics", "ResourceSize", "BitcoinAddresses"];
 
+        // Al cargar la página, inicia las funciones básicas
         window.onload = () => {
-            document.getElementById('apiInput').value = (API_URL === window.location.origin) ? '' : API_URL;
             renderManualFields();
             updateAdminUI();
-            
-            // Intentar cargar datos iniciales sin bloquear nada
-            fetch(`${API_URL}/visit`, { method: 'POST' }).catch(()=>{});
+            fetch(`${API_URL}/visit`, { method: 'POST' }).catch(()=>{}); // Registrar visita
             fetchStats();
             renderComments();
         };
 
+        // Crea dinámicamente los campos de texto para la entrada manual
         function renderManualFields() {
             let html = "";
             fields.forEach(f => { html += `<label>${f}</label><input type="number" id="${f}" value="0">`; });
             document.getElementById("manualFields").innerHTML = html;
         }
 
-        function saveApiUrl() {
-            const v = document.getElementById('apiInput').value.trim();
-            API_URL = v === '' ? window.location.origin : v;
-            localStorage.setItem('api_url', API_URL);
-            location.reload(); // Recargar para aplicar cambios
-        }
-
+        // Envía el archivo al servidor mediante una petición POST (Multipart)
         async function uploadFile() {
             const fileInput = document.getElementById('fileInput');
             if (!fileInput.files[0]) return alert("Selecciona un archivo .exe");
 
             const btn = document.getElementById('uploadBtn');
-            setLoading(btn, true);
+            setLoading(btn, true); // Activa el spinner
 
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
 
-            // Limpiar la URL para evitar el error de JSON/HTML
-            const base = API_URL.replace(/\/$/, "");
-            
             try {
-                const res = await fetch(`${base}/predict`, {
+                const res = await fetch(`${API_URL.replace(/\/$/, "")}/predict`, {
                     method: 'POST',
                     body: formData
                 });
-
-                if (!res.ok) throw new Error("El servidor devolvió un error (Posiblemente model.pkl no encontrado)");
-
                 const data = await res.json();
-                updateResult(JSON.stringify(data, null, 2));
-                setVisualResult(data.prediction);
-                fetchStats();
+                updateResult(JSON.stringify(data, null, 2)); // Muestra el JSON en la consola
+                setVisualResult(data.prediction); // Muestra el cartel de Seguro/Amenaza
+                fetchStats(); // Actualiza el dashboard
             } catch (err) {
-                console.error(err);
-                updateResult("Error: " + err.message, true);
-                alert("Error al procesar. Verifica que el servidor de Render esté encendido.");
+                alert("Error de conexión con el servidor de IA");
             } finally {
                 setLoading(btn, false);
             }
         }
 
-        async function predictManual() {
-            const btn = document.getElementById('manualBtn');
-            const payload = {};
-            fields.forEach(f => payload[f] = Number(document.getElementById(f).value));
-
-            setLoading(btn, true);
-            try {
-                const res = await fetch(`${API_URL.replace(/\/$/, "")}/predict_manual`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                updateResult(JSON.stringify(data, null, 2));
-                setVisualResult(data.prediction);
-                fetchStats();
-            } catch (err) {
-                updateResult("Error: " + err.message, true);
-            } finally {
-                setLoading(btn, false);
-            }
-        }
-
-        // --- UI HELPERS ---
+        // Muestra u oculta el estado de carga en los botones
         function setLoading(btn, isLoading) {
             btn.disabled = isLoading;
             if (isLoading) btn.innerHTML = `<span class="spinner"></span> Procesando...`;
             else btn.textContent = btn.id === 'uploadBtn' ? 'Ejecutar Análisis IA' : 'Clasificar Manualmente';
         }
 
-        function updateResult(text, isError = false) {
-            const r = document.getElementById('result');
-            r.textContent = text;
-            r.style.color = isError ? '#ff6b6b' : '#e6eef8';
-        }
-
+        // Actualiza el recuadro visual (Emoji y mensaje) basado en la predicción
         function setVisualResult(label) {
             const box = document.getElementById('visualResult');
             if (!label) { box.style.display = 'none'; return; }
@@ -278,9 +219,7 @@
             document.getElementById('visualMsg').textContent = isRansom ? 'AMENAZA DETECTADA' : 'ARCHIVO SEGURO';
         }
 
-        function clearResult() { updateResult("Esperando análisis..."); setVisualResult(null); }
-        function clearManual() { fields.forEach(f => document.getElementById(f).value = 0); }
-
+        // Obtiene las estadísticas de la base de datos (SQLite/Postgres)
         async function fetchStats() {
             try {
                 const res = await fetch(`${API_URL.replace(/\/$/, "")}/stats`);
@@ -289,52 +228,13 @@
                 document.getElementById('statFiles').textContent = s.files_tested || 0;
                 document.getElementById('statBenign').textContent = s.benign || 0;
                 document.getElementById('statRansom').textContent = s.ransomware || 0;
-                document.getElementById('statNA').textContent = s.not_applicable || 0;
             } catch (e) {}
         }
 
-        async function saveComment() {
-            const text = document.getElementById('commentInput').value.trim();
-            if (!text) return;
-            try {
-                await fetch(`${API_URL.replace(/\/$/, "")}/comment`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ text })
-                });
-                document.getElementById('commentInput').value = '';
-                renderComments();
-            } catch(e) {}
-        }
-
-        async function renderComments() {
-            try {
-                const res = await fetch(`${API_URL.replace(/\/$/, "")}/comments`);
-                const list = await res.json();
-                document.getElementById('commentsList').innerHTML = list.slice(-10).reverse().map(c => 
-                    `<li><strong>${new Date(c.ts).toLocaleDateString()}</strong>: ${c.text}</li>`
-                ).join('');
-            } catch (e) {}
-        }
-
-        // Admin Logic
-        function isAdmin() { return localStorage.getItem('admin_token') !== null; }
+        // Lógica de administrador para mostrar botones ocultos
         function updateAdminUI() {
-            document.querySelectorAll('[data-admin="true"]').forEach(el => el.style.display = isAdmin() ? 'block' : 'none');
-            const btn = document.getElementById('openAdminBtn');
-            btn.textContent = isAdmin() ? 'Logout' : 'Admin';
-            btn.onclick = isAdmin() ? adminLogout : openAdminModal;
-        }
-        function openAdminModal(){ document.getElementById('adminModal').style.display='block'; document.getElementById('adminBackdrop').style.display='block'; }
-        function closeAdminModal(){ document.getElementById('adminModal').style.display='none'; document.getElementById('adminBackdrop').style.display='none'; }
-        function adminLogout() { localStorage.removeItem('admin_token'); updateAdminUI(); }
-        async function adminLogin() {
-            const token = document.getElementById('adminTokenInput').value;
-            try {
-                const res = await fetch(`${API_URL.replace(/\/$/, "")}/admin/auth`, { headers: { 'X-Admin-Token': token } });
-                if (res.ok) { localStorage.setItem('admin_token', token); closeAdminModal(); updateAdminUI(); }
-                else alert("Token inválido");
-            } catch (e) { alert("Error de conexión"); }
+            const isAdm = localStorage.getItem('admin_token') !== null;
+            document.querySelectorAll('[data-admin="true"]').forEach(el => el.style.display = isAdm ? 'block' : 'none');
         }
     </script>
 </body>
